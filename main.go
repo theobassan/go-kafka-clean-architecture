@@ -1,49 +1,49 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"go-kafka-clean-architecture/app/infrastructure/api/event_api"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
-	"go-kafka-clean-architecture/app/infrastructure/broker/kafka"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_gorm"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_handler"
-	infrastructure "go-kafka-clean-architecture/app/infrastructure/router/rest_context"
-	interfaces "go-kafka-clean-architecture/app/interfaces/controller/rest_context"
+	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
+	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
+	event_context_interfaces "go-kafka-clean-architecture/app/input/controller/event_context"
+	http_context_interfaces "go-kafka-clean-architecture/app/input/controller/http_context"
 	"go-kafka-clean-architecture/registry"
 
 	"github.com/go-sql-driver/mysql"
 	_ "gorm.io/driver/postgres"
-	//_ "github.com/go-sql-driver/mysql"
 	//"github.com/jinzhu/gorm/dialects/mysql"
 )
 
 func main() {
 
-	sqlKafkaAppController := registerSQLHandlerSQL()
+	restAppController, eventAppController := registerSQLHandlerSQL()
 	//sqlKafkaAppController := registerSQLHandlerGorm()
 	//sqlKafkaAppController := registerGormHandler()
 
-	//infrastructure.NewEchoRouter(sqlKafkaAppController, 8080)
-	infrastructure.NewGinRouter(sqlKafkaAppController, 8080)
+	go event_context_infrastructure.StartKafkaRouter(eventAppController, "localhost:9092")
+	http_context_infrastructure.StartEchoRouter(restAppController, 8080)
 }
 
-func registerSQLHandlerSQL() *interfaces.AppController {
+func registerSQLHandlerSQL() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
 
 	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", "cleanarchitecture", "cleanarchitecture", "localhost", "3306", "cleanarchitecture")
 	mySqlDb, err := sql_handler.NewSQLDatabase("mysql", dataSourceName)
-	if err != nil {
+	if !errors.Is(err, nil) {
 		panic(err)
 	}
 
-	kafkaProductWriter := kafka.NewKafkaWriter("localhost:9092", "product")
-	kafkaProductReader := kafka.NewKafkaReader("localhost:9092", "product", "clean-architecture")
-
-	restAPI := rest_api.NewRestAPI()
+	restAPI := rest_api.NewHttpAPI("http://localhost:8080")
+	eventAPI := event_api.NewKafkaAPI("localhost:9092")
 
 	r := registry.NewRegistry()
-	return r.NewSqlBrokerAppController(restAPI, mySqlDb, kafkaProductWriter, kafkaProductReader)
+	return r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI)
 }
 
-func registerSQLHandlerGorm() *interfaces.AppController {
+func registerSQLHandlerGorm() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
 	mySqlConfig := &mysql.Config{
 		User:   "cleanarchitecture",
 		Passwd: "cleanarchitecture",
@@ -53,20 +53,18 @@ func registerSQLHandlerGorm() *interfaces.AppController {
 	}
 
 	mySqlDb, err := sql_handler.NewSQLGormDatabase("mysql", mySqlConfig.FormatDSN())
-	if err != nil {
+	if !errors.Is(err, nil) {
 		panic(err)
 	}
 
-	kafkaProductWriter := kafka.NewKafkaWriter("localhost:9092", "product")
-	kafkaProductReader := kafka.NewKafkaReader("localhost:9092", "product", "clean-architecture")
-
-	restAPI := rest_api.NewRestAPI()
+	restAPI := rest_api.NewHttpAPI("http://localhost:8080")
+	eventAPI := event_api.NewKafkaAPI("localhost:9092")
 
 	r := registry.NewRegistry()
-	return r.NewSqlBrokerAppController(restAPI, mySqlDb, kafkaProductWriter, kafkaProductReader)
+	return r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI)
 }
 
-func registerGormHandler() *interfaces.AppController {
+func registerGormHandler() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
 	mySqlConfig := &mysql.Config{
 		User:   "cleanarchitecture",
 		Passwd: "cleanarchitecture",
@@ -78,15 +76,13 @@ func registerGormHandler() *interfaces.AppController {
 	mySqlDb, err := sql_gorm.NewGormDatabase("mysql", mySqlConfig.FormatDSN())
 	//dataSourceName := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", "localhost", "cleanarchitecture", "cleanarchitecture", "cleanarchitecture", "5432")
 	//postgreSqlDb, err := sql_gorm.NewGormDatabase("pgx", dataSourceName)
-	if err != nil {
+	if !errors.Is(err, nil) {
 		panic(err)
 	}
 
-	kafkaProductWriter := kafka.NewKafkaWriter("localhost:9092", "product")
-	kafkaProductReader := kafka.NewKafkaReader("localhost:9092", "product", "clean-architecture")
-
-	restAPI := rest_api.NewRestAPI()
+	restAPI := rest_api.NewHttpAPI("http://localhost:8080")
+	eventAPI := event_api.NewKafkaAPI("localhost:9092")
 
 	r := registry.NewRegistry()
-	return r.NewGormBrokerAppController(restAPI, mySqlDb, kafkaProductWriter, kafkaProductReader)
+	return r.NewHttpContextRestGormEventAppController(restAPI, mySqlDb, eventAPI), r.NewEventContextRestGormEventAppController(restAPI, mySqlDb, eventAPI)
 }

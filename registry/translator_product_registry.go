@@ -1,13 +1,13 @@
 package registry
 
 import (
-	"go-kafka-clean-architecture/app/usecases/interactor"
+	"go-kafka-clean-architecture/app/usecases/translator"
 )
 
-func (r *Registry) NewProductBrasilTranslatorInteractor() interactor.ProductTranslatorInteractor {
-	return interactor.NewProductBrasilTranslatorInteractor()
+func (r *Registry) NewProductBrasilTranslator() translator.ProductTranslator {
+	return translator.NewProductBrasilTranslator()
 }
 
-func (r *Registry) NewProductChileTranslatorInteractor() interactor.ProductTranslatorInteractor {
-	return interactor.NewProductChileTranslatorInteractor()
+func (r *Registry) NewProductChileTranslator() translator.ProductTranslator {
+	return translator.NewProductChileTranslator()
 }

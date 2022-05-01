@@ -1,7 +1,7 @@
 package sql_gorm
 
 import (
-	"fmt"
+	"errors"
 	"go-kafka-clean-architecture/app/interfaces/database"
 
 	"github.com/jinzhu/gorm"
@@ -10,12 +10,11 @@ import (
 func NewGormDatabase(dialect string, source string) (database.SQLGorm, error) {
 
 	gormDB, err := gorm.Open(dialect, source)
-	if err != nil {
-		fmt.Println(1)
+	if !errors.Is(err, nil) {
 		return nil, err
 	}
 	err = gormDB.DB().Ping()
-	if err != nil {
+	if !errors.Is(err, nil) {
 		return nil, err
 	}
 

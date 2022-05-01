@@ -19,14 +19,15 @@ func NewProductRepository(sqlGorm database.SQLGorm) repository.ProductRepository
 
 func (repository *productRepository) FindAll() ([]*entities.Product, error) {
 	modelProducts := []*model.Product{}
-	if err := repository.sqlGorm.Find(&modelProducts).Error; !errors.Is(err, nil) {
+	err := repository.sqlGorm.Find(&modelProducts).Error
+	if !errors.Is(err, nil) {
 		return nil, err
 	}
 
 	products := []*entities.Product{}
 	for _, modelProduct := range modelProducts {
 		product := &entities.Product{
-			ID:   modelProduct.ID,
+			ID:   modelProduct.ExternalID,
 			Type: modelProduct.Type,
 			Name: modelProduct.Name,
 		}
@@ -43,7 +44,8 @@ func (repository *productRepository) Create(product *entities.Product) (*int64, 
 		Name:       product.Name,
 	}
 
-	if err := repository.sqlGorm.Create(&modelProduct).Error; !errors.Is(err, nil) {
+	err := repository.sqlGorm.Create(&modelProduct).Error
+	if !errors.Is(err, nil) {
 		return nil, err
 	}
 
