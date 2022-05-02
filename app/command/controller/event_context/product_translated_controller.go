@@ -40,5 +40,10 @@ func (controller *productTranslatedIController) Create(context router.EventConte
 		return errors.Wrap(err, 1)
 	}
 
-	return context.Acknowledge()
+	err = context.Acknowledge()
+	if !errors.Is(err, nil) {
+		return errors.Wrap(err, 1)
+	}
+
+	return nil
 }

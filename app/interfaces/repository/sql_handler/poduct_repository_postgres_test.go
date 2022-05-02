@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProductTranslatedRepositoryCreate_shoudlCreate(t *testing.T) {
+func TestProductRepositoryPostgresCreate_shoudlCreate(t *testing.T) {
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
@@ -25,24 +25,27 @@ func TestProductTranslatedRepositoryCreate_shoudlCreate(t *testing.T) {
 	assert.NoError(t, err)
 
 	createdID := int64(1)
-	dbMock.ExpectExec(
+	dbMock.ExpectQuery(
 		regexp.QuoteMeta(`
 			INSERT INTO
-			products_translated(external_id, type, name)
+				products(external_id, type, name)
 			VALUES
-				(?, ?, ?)
+				($1, $2, $3)
+			RETURNING
+				id
 		`)).
 		WithArgs(productID, productType, productName).
-		WillReturnResult(sqlmock.NewResult(createdID, 1))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).
+			AddRow(createdID))
 
-	productTranslatedRepository := NewProductTranslatedRepository(db)
+	productRepositoryPostgres := NewProductRepositoryPostgres(db)
 
-	returnedId, err := productTranslatedRepository.Create(product)
+	returnedId, err := productRepositoryPostgres.Create(product)
 	assert.NoError(t, err)
 	assert.Equal(t, *returnedId, createdID)
 }
 
-func TestProductTranslatedRepositoryFindAll_shoudlFindAll(t *testing.T) {
+func TestProductRepositoryPostgresFindAll_shoudlFindAll(t *testing.T) {
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
@@ -57,14 +60,14 @@ func TestProductTranslatedRepositoryFindAll_shoudlFindAll(t *testing.T) {
 			type,
 			name
 		FROM
-			products_translated
+			products
 		`)).
 		WillReturnRows(sqlmock.NewRows([]string{"external_id", "type", "name"}).
 			AddRow(productID, productType, productName))
 
-	productTranslatedRepository := NewProductTranslatedRepository(db)
+	productRepositoryPostgres := NewProductRepositoryPostgres(db)
 
-	returnedProduct, err := productTranslatedRepository.FindAll()
+	returnedProduct, err := productRepositoryPostgres.FindAll()
 	assert.NoError(t, err)
 	assert.Equal(t, *returnedProduct[0].ID, productID)
 	assert.Equal(t, *returnedProduct[0].Type, productType)

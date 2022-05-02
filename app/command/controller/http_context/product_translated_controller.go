@@ -16,14 +16,14 @@ type productTranslatedController struct {
 }
 
 type ProductTranslatedController interface {
-	FindAll(context router.HttpContext)
+	FindAll(context router.HttpContext) error
 }
 
 func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) ProductTranslatedController {
 	return &productTranslatedController{productTranslatedIteractor}
 }
 
-func (controller *productTranslatedController) FindAll(context router.HttpContext) {
+func (controller *productTranslatedController) FindAll(context router.HttpContext) error {
 
 	responseWriter := context.ResponseWriter()
 
@@ -32,7 +32,11 @@ func (controller *productTranslatedController) FindAll(context router.HttpContex
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	modelProducts := []*model.Product{}
@@ -47,5 +51,10 @@ func (controller *productTranslatedController) FindAll(context router.HttpContex
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	json.NewEncoder(responseWriter).Encode(modelProducts)
+
+	encodeErr := json.NewEncoder(responseWriter).Encode(modelProducts)
+	if !errors.Is(encodeErr, nil) {
+		return errors.Wrap(encodeErr, 1)
+	}
+	return nil
 }

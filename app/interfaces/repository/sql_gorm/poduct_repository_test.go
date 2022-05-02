@@ -56,7 +56,7 @@ func TestProductRepositoryCreate_shoudlCreateInPostres(t *testing.T) {
 	createdID := int64(1)
 	dbMock.ExpectBegin()
 	dbMock.ExpectQuery(
-		regexp.QuoteMeta(`INSERT INTO "products" ("external_id","type","name") VALUES ($1,$2,$3) RETURNING "products"."id`)).
+		regexp.QuoteMeta(`INSERT INTO "products" ("external_id","type","name") VALUES ($1,$2,$3) RETURNING "products"."id"`)).
 		WithArgs(productID, productType, productName).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).
 			AddRow(createdID))

@@ -17,55 +17,68 @@ type productController struct {
 }
 
 type ProductController interface {
-	Create(context router.HttpContext)
-	FindAll(context router.HttpContext)
-	Get(context router.HttpContext)
+	Create(context router.HttpContext) error
+	FindAll(context router.HttpContext) error
+	Get(context router.HttpContext) error
 }
 
 func NewProductController(productIteractor usecases.ProductInteractor) ProductController {
 	return &productController{productIteractor}
 }
 
-func (controller *productController) Create(context router.HttpContext) {
-
+func (controller *productController) Create(context router.HttpContext) error {
 	responseWriter := context.ResponseWriter()
 	request := context.Request()
 
 	product := model.Product{}
 	err := json.NewDecoder(request.Body).Decode(&product)
 	if !errors.Is(err, nil) {
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	id, err := controller.produtInteractor.Create(product.ID)
 	if !errors.Is(err, nil) {
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusCreated)
-	json.NewEncoder(responseWriter).Encode(id)
+
+	encodeErr := json.NewEncoder(responseWriter).Encode(id)
+	if !errors.Is(encodeErr, nil) {
+		return errors.Wrap(encodeErr, 1)
+	}
+	return nil
 }
 
-func (controller *productController) FindAll(context router.HttpContext) {
+func (controller *productController) FindAll(context router.HttpContext) error {
 
 	responseWriter := context.ResponseWriter()
 
 	products, err := controller.produtInteractor.FindAll()
 	if !errors.Is(err, nil) {
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	modelProducts := []*model.Product{}
@@ -80,10 +93,15 @@ func (controller *productController) FindAll(context router.HttpContext) {
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	json.NewEncoder(responseWriter).Encode(modelProducts)
+
+	encodeErr := json.NewEncoder(responseWriter).Encode(modelProducts)
+	if !errors.Is(encodeErr, nil) {
+		return errors.Wrap(encodeErr, 1)
+	}
+	return nil
 }
 
-func (controller *productController) Get(context router.HttpContext) {
+func (controller *productController) Get(context router.HttpContext) error {
 
 	responseWriter := context.ResponseWriter()
 	request := context.Request()
@@ -91,19 +109,26 @@ func (controller *productController) Get(context router.HttpContext) {
 	id := request.URL.Query().Get("id")
 	productID, err := strconv.ParseInt(id, 10, 64)
 	if !errors.Is(err, nil) {
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
+
 	product, err := controller.produtInteractor.Get(&productID)
 	if !errors.Is(err, nil) {
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 
-		json.NewEncoder(responseWriter).Encode(err)
+		encodeErr := json.NewEncoder(responseWriter).Encode(err)
+		if !errors.Is(encodeErr, nil) {
+			return errors.Wrap(encodeErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	modelProduct := &model.Product{
@@ -114,5 +139,10 @@ func (controller *productController) Get(context router.HttpContext) {
 
 	responseWriter.Header().Set("Content-Type", "application/json")
 	responseWriter.WriteHeader(http.StatusOK)
-	json.NewEncoder(responseWriter).Encode(modelProduct)
+
+	encodeErr := json.NewEncoder(responseWriter).Encode(modelProduct)
+	if !errors.Is(encodeErr, nil) {
+		return errors.Wrap(encodeErr, 1)
+	}
+	return nil
 }

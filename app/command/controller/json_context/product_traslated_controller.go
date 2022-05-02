@@ -15,17 +15,21 @@ type productTranslatedController struct {
 }
 
 type ProductTranslatedController interface {
-	FindAll(context router.JsonContext)
+	FindAll(context router.JsonContext) error
 }
 
 func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) ProductTranslatedController {
 	return &productTranslatedController{productTranslatedIteractor}
 }
 
-func (controller *productTranslatedController) FindAll(context router.JsonContext) {
+func (controller *productTranslatedController) FindAll(context router.JsonContext) error {
 	products, err := controller.produtTranslatedInteractor.FindAll()
 	if !errors.Is(err, nil) {
-		context.JSON(http.StatusInternalServerError, err)
+		jsonErr := context.JSON(http.StatusInternalServerError, err)
+		if !errors.Is(err, nil) {
+			return errors.Wrap(jsonErr, 1)
+		}
+		return errors.Wrap(err, 1)
 	}
 
 	modelProducts := []*model.Product{}
@@ -38,5 +42,9 @@ func (controller *productTranslatedController) FindAll(context router.JsonContex
 		modelProducts = append(modelProducts, modelProduct)
 	}
 
-	context.JSON(http.StatusOK, modelProducts)
+	jsonErr := context.JSON(http.StatusOK, modelProducts)
+	if !errors.Is(err, nil) {
+		return errors.Wrap(jsonErr, 1)
+	}
+	return nil
 }

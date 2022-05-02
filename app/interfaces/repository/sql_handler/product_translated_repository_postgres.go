@@ -8,43 +8,41 @@ import (
 	"github.com/go-errors/errors"
 )
 
-type productRepository struct {
+type productTranslatedRepositoryPostgres struct {
 	sqlHandler database.SQLHandler
 }
 
-func NewProductRepository(sqlHandler database.SQLHandler) repository.ProductRepository {
-	return &productRepository{sqlHandler}
+func NewProductTranslatedRepositoryPostgres(sqlHandler database.SQLHandler) repository.ProductTranslatedRepository {
+	return &productTranslatedRepositoryPostgres{sqlHandler}
 }
 
-func (repository *productRepository) Create(product *entities.Product) (*int64, error) {
+func (repository *productTranslatedRepositoryPostgres) Create(product *entities.Product) (*int64, error) {
 	const query = `
 		INSERT INTO
-			products(external_id, type, name)
+			products_translated(external_id, type, name)
 		VALUES
-			(?, ?, ?)
+			($1, $2, $3)
+		RETURNING
+				id
 	`
 
-	result, err := repository.sqlHandler.Exec(query, product.ID, product.Type, product.Name)
+	id := new(int64)
+	err := repository.sqlHandler.QueryRow(query, product.ID, product.Type, product.Name).Scan(id)
 	if !errors.Is(err, nil) {
 		return nil, errors.Wrap(err, 1)
 	}
 
-	id, err := result.LastInsertId()
-	if !errors.Is(err, nil) {
-		return nil, errors.Wrap(err, 1)
-	}
-
-	return &id, nil
+	return id, nil
 }
 
-func (repository *productRepository) FindAll() ([]*entities.Product, error) {
+func (repository *productTranslatedRepositoryPostgres) FindAll() ([]*entities.Product, error) {
 	const query = `
 		SELECT
 			external_id,
 			type,
 			name
 		FROM
-			products
+			products_translated
 	`
 	rows, err := repository.sqlHandler.Query(query)
 	if !errors.Is(err, nil) {

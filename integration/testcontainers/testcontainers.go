@@ -128,9 +128,7 @@ func SetupSQLHandlerPostgres(ctx context.Context) (database.SQLHandler, testcont
 	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbSqlUsername, dbSqlPassword, host, port, dbSqlName)
 	//connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
 	//connectionString := fmt.Sprintf("PGHOST=%s PGPORT=%s PGUSER=%s PGPASSWORD=%s PGSSLMODE=disable PGDATABASE=%s", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
-
 	//connectionString := fmt.Sprintf("%s:%s/%s?user=%s&password=%s", host, port, dbSqlName, dbSqlUsername, dbSqlPassword)
-	fmt.Println(connectionString)
 
 	postgresDb, err := sql_handler.NewSQLDatabase("postgres", connectionString)
 	if !errors.Is(err, nil) {

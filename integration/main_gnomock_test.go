@@ -2,6 +2,7 @@ package integration
 
 import (
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
+	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
 	"go-kafka-clean-architecture/app/interfaces/repository/sql_gorm/model"
@@ -18,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreate_gnomock(t *testing.T) {
+func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
 	mySqlDb, mySqlC, err := gnomock.SetupSQLHandlerMySQL()
@@ -34,12 +35,13 @@ func TestCreate_gnomock(t *testing.T) {
 	restAPI := rest_api.NewHttpAPI(serverURL)
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	eventContextAppController := r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	logger := logger.NewDebugLogger()
 
 	kafkaConnectionString := kafkaC.Address(kafka.BrokerPort)
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString)
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	test.TestCreate(t, serverURL)
 
@@ -50,7 +52,40 @@ func TestCreate_gnomock(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindAll_gnomock(t *testing.T) {
+func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
+	port, _ := nat.NewPort("", strconv.Itoa(8080))
+
+	postgresDb, postgresC, err := gnomock.SetupSQLHandlerPostgres()
+	require.NoError(t, err)
+	//defer gnomock.Stop(postgresC)
+
+	kafkaAPI, kafkaC, err := gnomock.SetupEventAPI()
+	require.NoError(t, err)
+	//defer gnomock.Stop(kafkaC)
+
+	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
+
+	restAPI := rest_api.NewHttpAPI(serverURL)
+
+	r := registry.NewRegistry()
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(restAPI, postgresDb, kafkaAPI)
+	eventContextAppController := r.NewEventContextRestSqlEventAppControllerPostgres(restAPI, postgresDb, kafkaAPI)
+	logger := logger.NewDebugLogger()
+
+	kafkaConnectionString := kafkaC.Address(kafka.BrokerPort)
+	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+
+	test.TestCreate(t, serverURL)
+
+	err = gnomock.Stop(postgresC)
+	require.NoError(t, err)
+
+	err = gnomock.Stop(kafkaC)
+	require.NoError(t, err)
+}
+
+func TestFindAll_gnomock_mqsql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
 	mySqlDb, mySqlC, err := gnomock.SetupSQLHandlerMySQL()
@@ -60,13 +95,15 @@ func TestFindAll_gnomock(t *testing.T) {
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, mySqlDb, nil)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(nil, mySqlDb, nil)
+	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
+
 	_, err = mySqlDb.Exec(`
 		INSERT INTO
 			products(external_id, type, name)
@@ -79,7 +116,7 @@ func TestFindAll_gnomock(t *testing.T) {
 		INSERT INTO
 			products_translated(external_id, type, name)
 		VALUES
-			(?, ?, ?)
+		(?, ?, ?)
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
@@ -89,7 +126,7 @@ func TestFindAll_gnomock(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindAll_gnomock_Postgres(t *testing.T) {
+func TestFindAll_gnomock_postgres_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
 	postgresDb, postgresC, err := gnomock.SetupSQLHandlerPostgres()
@@ -99,16 +136,18 @@ func TestFindAll_gnomock_Postgres(t *testing.T) {
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, postgresDb, nil)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(nil, postgresDb, nil)
+	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
+
 	_, err = postgresDb.Exec(`
 		INSERT INTO
-			products(external_id, type, name)
+			"products" ("external_id", "type", "name")
 		VALUES
 			($1, $2, $3)
 	`, productID, productType, productName)
@@ -116,7 +155,7 @@ func TestFindAll_gnomock_Postgres(t *testing.T) {
 
 	_, err = postgresDb.Exec(`
 		INSERT INTO
-			products_translated(external_id, type, name)
+			"products_translated" ("external_id", "type", "name")
 		VALUES
 			($1, $2, $3)
 	`, productID, productType, productName)
@@ -128,7 +167,7 @@ func TestFindAll_gnomock_Postgres(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindAll_gnomock_Postgres_gorm(t *testing.T) {
+func TestFindAll_gnomock_postgres_sql_gorm(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
 	postgresDb, postgresC, err := gnomock.SetupSQLGormPostgres()
@@ -139,8 +178,9 @@ func TestFindAll_gnomock_Postgres_gorm(t *testing.T) {
 
 	r := registry.NewRegistry()
 	httpContextAppController := r.NewHttpContextRestGormEventAppController(nil, postgresDb, nil)
+	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"

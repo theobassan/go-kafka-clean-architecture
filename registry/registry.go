@@ -14,15 +14,40 @@ func NewRegistry() *Registry {
 	return &Registry{}
 }
 
-func (r *Registry) NewHttpContextRestSqlEventAppController(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *http_context.AppController {
+func (r *Registry) NewHttpContextRestSqlEventAppControllerMySql(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *http_context.AppController {
 	//interactor := r.NewRestSqlEventProductInteractor(restAPI, sqlHandler, eventAPI, r.NewProductChileTranslator())
-	interactor := r.NewRestSqlEventProductInteractor(restAPI, sqlHandler, eventAPI, r.NewProductBrasilTranslator())
-	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractor(sqlHandler)
+	interactor := r.NewRestSqlEventProductInteractorMySql(restAPI, sqlHandler, eventAPI, r.NewProductBrasilTranslator())
+	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractorMySql(sqlHandler)
 
 	productController := http_context.NewProductController(interactor)
 	productTranslatedController := http_context.NewProductTranslatedController(interactorTranslated)
 
 	return http_context.NewAppController(productController, productTranslatedController)
+}
+
+func (r *Registry) NewEventContextRestSqlEventAppControllerMySql(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *event_context.AppController {
+	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractorMySql(sqlHandler)
+	productTranslatedController := event_context.NewProductTranslatedController(interactorTranslated)
+
+	return event_context.NewAppController(productTranslatedController)
+}
+
+func (r *Registry) NewHttpContextRestSqlEventAppControllerPostgres(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *http_context.AppController {
+	//interactor := r.NewRestSqlEventProductInteractor(restAPI, sqlHandler, eventAPI, r.NewProductChileTranslator())
+	interactor := r.NewRestSqlEventProductInteractorPostgres(restAPI, sqlHandler, eventAPI, r.NewProductBrasilTranslator())
+	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractorPostgres(sqlHandler)
+
+	productController := http_context.NewProductController(interactor)
+	productTranslatedController := http_context.NewProductTranslatedController(interactorTranslated)
+
+	return http_context.NewAppController(productController, productTranslatedController)
+}
+
+func (r *Registry) NewEventContextRestSqlEventAppControllerPostgres(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *event_context.AppController {
+	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractorPostgres(sqlHandler)
+	productTranslatedController := event_context.NewProductTranslatedController(interactorTranslated)
+
+	return event_context.NewAppController(productTranslatedController)
 }
 
 func (r *Registry) NewHttpContextRestGormEventAppController(restAPI api.RestAPI, sqlGorm database.SQLGorm, eventAPI api.EventAPI) *http_context.AppController {
@@ -34,13 +59,6 @@ func (r *Registry) NewHttpContextRestGormEventAppController(restAPI api.RestAPI,
 	productTranslatedController := http_context.NewProductTranslatedController(interactorTranslated)
 
 	return http_context.NewAppController(productController, productTranslatedController)
-}
-
-func (r *Registry) NewEventContextRestSqlEventAppController(restAPI api.RestAPI, sqlHandler database.SQLHandler, eventAPI api.EventAPI) *event_context.AppController {
-	interactorTranslated := r.NewRestSqlEventProductTraslatedInteractor(sqlHandler)
-	productTranslatedController := event_context.NewProductTranslatedController(interactorTranslated)
-
-	return event_context.NewAppController(productTranslatedController)
 }
 
 func (r *Registry) NewEventContextRestGormEventAppController(restAPI api.RestAPI, sqlGorm database.SQLGorm, eventAPI api.EventAPI) *event_context.AppController {

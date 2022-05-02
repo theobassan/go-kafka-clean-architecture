@@ -8,18 +8,18 @@ import (
 	"github.com/go-errors/errors"
 )
 
-type productTranslatedRepository struct {
+type productRepositoryMySql struct {
 	sqlHandler database.SQLHandler
 }
 
-func NewProductTranslatedRepository(sqlHandler database.SQLHandler) repository.ProductTranslatedRepository {
-	return &productTranslatedRepository{sqlHandler}
+func NewProductRepositoryMySql(sqlHandler database.SQLHandler) repository.ProductRepository {
+	return &productRepositoryMySql{sqlHandler}
 }
 
-func (repository *productTranslatedRepository) Create(product *entities.Product) (*int64, error) {
+func (repository *productRepositoryMySql) Create(product *entities.Product) (*int64, error) {
 	const query = `
 		INSERT INTO
-			products_translated(external_id, type, name)
+			products(external_id, type, name)
 		VALUES
 			(?, ?, ?)
 	`
@@ -37,14 +37,14 @@ func (repository *productTranslatedRepository) Create(product *entities.Product)
 	return &id, nil
 }
 
-func (repository *productTranslatedRepository) FindAll() ([]*entities.Product, error) {
+func (repository *productRepositoryMySql) FindAll() ([]*entities.Product, error) {
 	const query = `
 		SELECT
 			external_id,
 			type,
 			name
 		FROM
-			products_translated
+			products
 	`
 	rows, err := repository.sqlHandler.Query(query)
 	if !errors.Is(err, nil) {

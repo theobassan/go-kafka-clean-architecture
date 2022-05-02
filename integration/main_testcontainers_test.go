@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
+	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
 	"go-kafka-clean-architecture/integration/test"
@@ -17,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreate_testcontainers(t *testing.T) {
+func TestCreate_testcontainers_mysql(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
@@ -35,13 +36,14 @@ func TestCreate_testcontainers(t *testing.T) {
 	restAPI := rest_api.NewHttpAPI(serverURL)
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	eventContextAppController := r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	logger := logger.NewDebugLogger()
 
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, "localhost:9092")
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, "localhost:9092", logger)
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
-	//test.TestCreate(t, serverURL)
+	test.TestCreate(t, serverURL)
 
 	err = mySqlC.Terminate(ctx)
 	require.NoError(t, err)
@@ -53,7 +55,7 @@ func TestCreate_testcontainers(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindAll_testcontainers(t *testing.T) {
+func TestFindAll_testcontainers_mysql(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
@@ -64,13 +66,15 @@ func TestFindAll_testcontainers(t *testing.T) {
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, mySqlDb, nil)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(nil, mySqlDb, nil)
+	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
+
 	_, err = mySqlDb.Exec(`
 		INSERT INTO
 			products(external_id, type, name)
@@ -83,7 +87,7 @@ func TestFindAll_testcontainers(t *testing.T) {
 		INSERT INTO
 			products_translated(external_id, type, name)
 		VALUES
-			(?, ?, ?)
+		(?, ?, ?)
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
@@ -93,7 +97,7 @@ func TestFindAll_testcontainers(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestFindAll_testcontainers_Postgres(t *testing.T) {
+func TestFindAll_testcontainers_postgres(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
@@ -104,26 +108,28 @@ func TestFindAll_testcontainers_Postgres(t *testing.T) {
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, postgresDb, nil)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(nil, postgresDb, nil)
+	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
+
 	_, err = postgresDb.Exec(`
 		INSERT INTO
-			products(external_id, type, name)
+			"products" ("external_id", "type", "name")
 		VALUES
-			(?, ?, ?)
+			($1, $2, $3)
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
 	_, err = postgresDb.Exec(`
 		INSERT INTO
-			products_translated(external_id, type, name)
+			"products_translated" ("external_id", "type", "name")
 		VALUES
-			(?, ?, ?)
+			($1, $2, $3)
 	`, productID, productType, productName)
 	require.NoError(t, err)
 

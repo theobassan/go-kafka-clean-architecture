@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestProductRepositoryCreate_shoudlCreate(t *testing.T) {
+func TestProductRepositoryMySqlCreate_shoudlCreate(t *testing.T) {
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
@@ -35,14 +35,14 @@ func TestProductRepositoryCreate_shoudlCreate(t *testing.T) {
 		WithArgs(productID, productType, productName).
 		WillReturnResult(sqlmock.NewResult(createdID, 1))
 
-	productRepository := NewProductRepository(db)
+	productRepositoryMySql := NewProductRepositoryMySql(db)
 
-	returnedId, err := productRepository.Create(product)
+	returnedId, err := productRepositoryMySql.Create(product)
 	assert.NoError(t, err)
 	assert.Equal(t, *returnedId, createdID)
 }
 
-func TestProductRepositoryFindAll_shoudlFindAll(t *testing.T) {
+func TestProductRepositoryMySqlFindAll_shoudlFindAll(t *testing.T) {
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
@@ -62,9 +62,9 @@ func TestProductRepositoryFindAll_shoudlFindAll(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"external_id", "type", "name"}).
 			AddRow(productID, productType, productName))
 
-	productRepository := NewProductRepository(db)
+	productRepositoryMySql := NewProductRepositoryMySql(db)
 
-	returnedProduct, err := productRepository.FindAll()
+	returnedProduct, err := productRepositoryMySql.FindAll()
 	assert.NoError(t, err)
 	assert.Equal(t, *returnedProduct[0].ID, productID)
 	assert.Equal(t, *returnedProduct[0].Type, productType)

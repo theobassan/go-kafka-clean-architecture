@@ -8,6 +8,7 @@ import (
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_gorm"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_handler"
+	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
 	"go-kafka-clean-architecture/registry"
@@ -16,7 +17,6 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	_ "gorm.io/driver/postgres"
-	//"github.com/jinzhu/gorm/dialects/mysql"
 )
 
 func main() {
@@ -24,9 +24,16 @@ func main() {
 	restAppController, eventAppController := registerSQLHandlerSQL()
 	//sqlKafkaAppController := registerSQLHandlerGorm()
 	//sqlKafkaAppController := registerGormHandler()
+	logger, err := logger.NewLogger()
+	if !errors.Is(err, nil) {
+		panic(err)
+	}
 
-	go event_context_infrastructure.StartKafkaRouter(eventAppController, "localhost:9092")
-	http_context_infrastructure.StartEchoRouter(restAppController, 8080)
+	go event_context_infrastructure.StartKafkaRouter(eventAppController, "localhost:9092", logger)
+	err = http_context_infrastructure.StartEchoRouter(restAppController, 8080, logger)
+	if !errors.Is(err, nil) {
+		panic(err)
+	}
 }
 
 func registerSQLHandlerSQL() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
@@ -41,7 +48,7 @@ func registerSQLHandlerSQL() (*http_context_interfaces.AppController, *event_con
 	eventAPI := event_api.NewKafkaAPI("localhost:9092")
 
 	r := registry.NewRegistry()
-	return r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI)
+	return r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, eventAPI)
 }
 
 func registerSQLHandlerGorm() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
@@ -62,7 +69,7 @@ func registerSQLHandlerGorm() (*http_context_interfaces.AppController, *event_co
 	eventAPI := event_api.NewKafkaAPI("localhost:9092")
 
 	r := registry.NewRegistry()
-	return r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, eventAPI)
+	return r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, eventAPI), r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, eventAPI)
 }
 
 func registerGormHandler() (*http_context_interfaces.AppController, *event_context_interfaces.AppController) {
