@@ -1,7 +1,7 @@
 package database
 
 import (
-	"errors"
+	"github.com/go-errors/errors"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jinzhu/gorm"
@@ -10,12 +10,12 @@ import (
 func NewSqlGormMock(dialect string) (SQLGorm, sqlmock.Sqlmock, error) {
 	db, mock, err := sqlmock.New()
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	gormDB, err := gorm.Open(dialect, db)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	return gormDB, mock, nil

@@ -23,11 +23,12 @@ func TestCreate_testcontainers(t *testing.T) {
 
 	mySqlDb, mySqlC, err := testcontainers.SetupSQLHandlerMySql(ctx)
 	require.NoError(t, err)
-	//defer mySqlC.Terminate()
+	//defer mySqlC.Terminate(ctx)
 
-	kafkaAPI, kafkaC, err := testcontainers.SetupEventAPICompose(ctx)
+	kafkaAPI, zookeeperC, kafkaC, err := testcontainers.SetupEventAPI(ctx)
 	require.NoError(t, err)
-	//defer kafkaC.Down()
+	//defer zookeeperC.Terminate(ctx)
+	//defer kafkaC.Terminate(ctx)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -45,7 +46,10 @@ func TestCreate_testcontainers(t *testing.T) {
 	err = mySqlC.Terminate(ctx)
 	require.NoError(t, err)
 
-	err = kafkaC.Down().Error
+	err = kafkaC.Terminate(ctx)
+	require.NoError(t, err)
+
+	err = zookeeperC.Terminate(ctx)
 	require.NoError(t, err)
 }
 
@@ -55,28 +59,76 @@ func TestFindAll_testcontainers(t *testing.T) {
 
 	mySqlDb, mySqlC, err := testcontainers.SetupSQLHandlerMySql(ctx)
 	require.NoError(t, err)
-	//defer mySqlC.Terminate()
-
-	kafkaAPI, kafkaC, err := testcontainers.SetupEventAPICompose(ctx)
-	require.NoError(t, err)
-	//defer kafkaC.Down()
+	//defer mySqlC.Terminate(ctx)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
-	restAPI := rest_api.NewHttpAPI(serverURL)
-
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppController(restAPI, mySqlDb, kafkaAPI)
+	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, mySqlDb, nil)
 
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, "localhost:9092")
 	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+
+	productID := int64(123)
+	productType := "Type"
+	productName := "Name"
+	_, err = mySqlDb.Exec(`
+		INSERT INTO
+			products(external_id, type, name)
+		VALUES
+			(?, ?, ?)
+	`, productID, productType, productName)
+	require.NoError(t, err)
+
+	_, err = mySqlDb.Exec(`
+		INSERT INTO
+			products_translated(external_id, type, name)
+		VALUES
+			(?, ?, ?)
+	`, productID, productType, productName)
+	require.NoError(t, err)
 
 	test.TestFindAll(t, serverURL)
 
 	err = mySqlC.Terminate(ctx)
 	require.NoError(t, err)
+}
 
-	err = kafkaC.Down().Error
+func TestFindAll_testcontainers_Postgres(t *testing.T) {
+	port, _ := nat.NewPort("", strconv.Itoa(8080))
+	ctx := context.Background()
+
+	postgresDb, postgresC, err := testcontainers.SetupSQLHandlerPostgres(ctx)
+	require.NoError(t, err)
+	//defer postgresC.Terminate(ctx)
+
+	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
+
+	r := registry.NewRegistry()
+	httpContextAppController := r.NewHttpContextRestSqlEventAppController(nil, postgresDb, nil)
+
+	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int())
+
+	productID := int64(123)
+	productType := "Type"
+	productName := "Name"
+	_, err = postgresDb.Exec(`
+		INSERT INTO
+			products(external_id, type, name)
+		VALUES
+			(?, ?, ?)
+	`, productID, productType, productName)
+	require.NoError(t, err)
+
+	_, err = postgresDb.Exec(`
+		INSERT INTO
+			products_translated(external_id, type, name)
+		VALUES
+			(?, ?, ?)
+	`, productID, productType, productName)
+	require.NoError(t, err)
+
+	test.TestFindAll(t, serverURL)
+
+	err = postgresC.Terminate(ctx)
 	require.NoError(t, err)
 }

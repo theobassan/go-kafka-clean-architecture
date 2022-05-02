@@ -1,12 +1,12 @@
 package event_context
 
 import (
-	"errors"
+	"github.com/go-errors/errors"
 
+	"go-kafka-clean-architecture/app/command/controller/event_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/controller/event_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
 )
 
 type productTranslatedIController struct {
@@ -26,7 +26,7 @@ func (controller *productTranslatedIController) Create(context router.EventConte
 
 	err := context.Bind(&params)
 	if !errors.Is(err, nil) {
-		return err
+		return errors.Wrap(err, 1)
 	}
 
 	product := &entities.Product{
@@ -37,7 +37,7 @@ func (controller *productTranslatedIController) Create(context router.EventConte
 
 	_, err = controller.produtTranslatedInteractor.Create(product)
 	if !errors.Is(err, nil) {
-		return err
+		return errors.Wrap(err, 1)
 	}
 
 	return context.Acknowledge()

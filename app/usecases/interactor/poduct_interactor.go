@@ -1,13 +1,14 @@
 package interactor
 
 import (
-	"errors"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/usecases"
 	"go-kafka-clean-architecture/app/usecases/gateway"
 	"go-kafka-clean-architecture/app/usecases/repository"
 	"go-kafka-clean-architecture/app/usecases/translator"
 	"strconv"
+
+	"github.com/go-errors/errors"
 )
 
 type productInteractor struct {
@@ -24,18 +25,18 @@ func NewProductInteractor(productFinderGateway gateway.ProductFinderGateway, pro
 func (interactor *productInteractor) Create(id *int64) (*int64, error) {
 	product, err := interactor.productFinderGateway.FindById(id)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	createdId, err := interactor.productRepository.Create(product)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	productTranslated := interactor.productTranslator.Translate(product)
 	err = interactor.productSenderGateway.Send(productTranslated)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return createdId, nil
@@ -44,7 +45,7 @@ func (interactor *productInteractor) Create(id *int64) (*int64, error) {
 func (interactor *productInteractor) FindAll() ([]*entities.Product, error) {
 	products, err := interactor.productRepository.FindAll()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return products, nil

@@ -3,8 +3,9 @@ package kafka
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"go-kafka-clean-architecture/app/input/router"
+	"go-kafka-clean-architecture/app/command/router"
+
+	"github.com/go-errors/errors"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -22,7 +23,7 @@ func NewKafkaContext(ctx context.Context, kafkaReader *kafka.Reader, kafkaMessag
 func (context *KafkaContext) Bind(v any) error {
 	err := json.Unmarshal(context.kafkaMessage.Value, v)
 	if !errors.Is(err, nil) {
-		return err
+		return errors.Wrap(err, 1)
 	}
 	return nil
 }
@@ -30,7 +31,7 @@ func (context *KafkaContext) Bind(v any) error {
 func (context *KafkaContext) Acknowledge() error {
 	err := context.kafkaReader.CommitMessages(context.ctx, context.kafkaMessage)
 	if !errors.Is(err, nil) {
-		return err
+		return errors.Wrap(err, 1)
 	}
 	return nil
 }

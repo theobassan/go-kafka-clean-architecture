@@ -1,17 +1,20 @@
 package gnomock
 
 import (
-	"errors"
 	"fmt"
 	"go-kafka-clean-architecture/app/infrastructure/api/event_api"
+	"go-kafka-clean-architecture/app/infrastructure/database/sql_gorm"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_handler"
 	"go-kafka-clean-architecture/app/interfaces/api"
 	"go-kafka-clean-architecture/app/interfaces/database"
 	"os"
 
+	"github.com/go-errors/errors"
+
 	"github.com/orlangure/gnomock"
 	"github.com/orlangure/gnomock/preset/kafka"
 	"github.com/orlangure/gnomock/preset/mysql"
+	"github.com/orlangure/gnomock/preset/postgres"
 )
 
 const (
@@ -27,7 +30,7 @@ func Stop(container *gnomock.Container) error {
 func SetupMySql() (*gnomock.Container, error) {
 	seedDataPath, err := os.Getwd()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 	schema := seedDataPath + "/db-data/mysql-schema.sql"
 
@@ -41,7 +44,7 @@ func SetupMySql() (*gnomock.Container, error) {
 		//gnomock.WithLogWriter(os.Stdout),
 	)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return kafkaC, nil
@@ -50,9 +53,8 @@ func SetupMySql() (*gnomock.Container, error) {
 func SetupSQLHandlerMySQL() (database.SQLHandler, *gnomock.Container, error) {
 	mySqlC, err := SetupMySql()
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
-	//
 
 	addr := mySqlC.DefaultAddress()
 	connectionString := fmt.Sprintf(
@@ -62,10 +64,72 @@ func SetupSQLHandlerMySQL() (database.SQLHandler, *gnomock.Container, error) {
 
 	mySqlDb, err := sql_handler.NewSQLDatabase("mysql", connectionString)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		gnomock.Stop(mySqlC)
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	return mySqlDb, mySqlC, nil
+}
+
+func SetupPostgres() (*gnomock.Container, error) {
+	seedDataPath, err := os.Getwd()
+	if !errors.Is(err, nil) {
+		return nil, errors.Wrap(err, 1)
+	}
+	schema := seedDataPath + "/db-data/postgres-schema.sql"
+
+	postgresC, err := gnomock.Start(
+		postgres.Preset(
+			postgres.WithUser(dbSqlUsername, dbSqlPassword),
+			postgres.WithDatabase(dbSqlName),
+			postgres.WithQueriesFile(schema),
+		),
+		//gnomock.WithDebugMode(),
+		//gnomock.WithLogWriter(os.Stdout),
+	)
+	if !errors.Is(err, nil) {
+		return nil, errors.Wrap(err, 1)
+	}
+
+	return postgresC, nil
+}
+
+func SetupSQLHandlerPostgres() (database.SQLHandler, *gnomock.Container, error) {
+	postgresC, err := SetupPostgres()
+	if !errors.Is(err, nil) {
+		return nil, nil, errors.Wrap(err, 1)
+	}
+	connectionString := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s  dbname=%s sslmode=disable",
+		postgresC.Host, postgresC.DefaultPort(), dbSqlUsername, dbSqlPassword, dbSqlName,
+	)
+
+	postgresDb, err := sql_handler.NewSQLDatabase("postgres", connectionString)
+	if !errors.Is(err, nil) {
+		gnomock.Stop(postgresC)
+		return nil, nil, errors.Wrap(err, 1)
+	}
+
+	return postgresDb, postgresC, nil
+}
+
+func SetupSQLGormPostgres() (database.SQLGorm, *gnomock.Container, error) {
+	postgresC, err := SetupPostgres()
+	if !errors.Is(err, nil) {
+		return nil, nil, errors.Wrap(err, 1)
+	}
+	connectionString := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s  dbname=%s sslmode=disable",
+		postgresC.Host, postgresC.DefaultPort(), dbSqlUsername, dbSqlPassword, dbSqlName,
+	)
+
+	postgresDb, err := sql_gorm.NewGormDatabase("postgres", connectionString)
+	if !errors.Is(err, nil) {
+		gnomock.Stop(postgresC)
+		return nil, nil, errors.Wrap(err, 1)
+	}
+
+	return postgresDb, postgresC, nil
 }
 
 func SetupKafka() (*gnomock.Container, error) {
@@ -75,7 +139,7 @@ func SetupKafka() (*gnomock.Container, error) {
 		//gnomock.WithLogWriter(os.Stdout),
 	)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return kafkaC, nil
@@ -84,7 +148,7 @@ func SetupKafka() (*gnomock.Container, error) {
 func SetupEventAPI() (api.EventAPI, *gnomock.Container, error) {
 	kafkaC, err := SetupKafka()
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	connectionString := kafkaC.Address(kafka.BrokerPort)

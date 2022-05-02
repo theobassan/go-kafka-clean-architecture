@@ -2,12 +2,13 @@ package http_context
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	"go-kafka-clean-architecture/app/input/controller/http_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
+	"github.com/go-errors/errors"
+
+	"go-kafka-clean-architecture/app/command/controller/http_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 )
 
 type productTranslatedController struct {

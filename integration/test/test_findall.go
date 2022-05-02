@@ -34,6 +34,17 @@ func TestFindAll(t *testing.T, serverURL string) {
 	err = json.Unmarshal(responseFindAllTranslatedBodyBytes, &productsTranslated)
 	require.NoError(t, err)
 
-	assert.Len(t, products, 0)
-	assert.Len(t, productsTranslated, 0)
+	productID := int64(123)
+	productType := "Type"
+	productName := "Name"
+
+	assert.Len(t, products, 1)
+	assert.Equal(t, *products[0].ID, productID)
+	assert.Equal(t, *products[0].Type, productType)
+	assert.Equal(t, *products[0].Name, productName)
+
+	assert.Len(t, productsTranslated, 1)
+	assert.Equal(t, *productsTranslated[0].ID, productID)
+	assert.Equal(t, *productsTranslated[0].Type, productType)
+	assert.Equal(t, *productsTranslated[0].Name, productName)
 }

@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"context"
-	"errors"
-	"go-kafka-clean-architecture/app/input/controller/event_context"
+	"go-kafka-clean-architecture/app/command/controller/event_context"
 	"log"
+
+	"github.com/go-errors/errors"
 
 	"github.com/segmentio/kafka-go"
 )

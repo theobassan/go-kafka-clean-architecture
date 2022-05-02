@@ -1,7 +1,7 @@
 package http_context
 
 import (
-	"go-kafka-clean-architecture/app/input/router"
+	"go-kafka-clean-architecture/app/command/router"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

@@ -2,10 +2,10 @@ package http_context
 
 import (
 	"encoding/json"
+	"go-kafka-clean-architecture/app/command/controller/http_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/controller/http_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
 	"net/http"
 	"net/http/httptest"
 	"strconv"

@@ -1,13 +1,14 @@
 package json_context
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
-	"go-kafka-clean-architecture/app/input/controller/json_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
+	"github.com/go-errors/errors"
+
+	"go-kafka-clean-architecture/app/command/controller/json_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 )
 
 type productController struct {

@@ -1,9 +1,10 @@
 package interactor
 
 import (
-	"errors"
 	"go-kafka-clean-architecture/app/entities"
 	"go-kafka-clean-architecture/app/usecases/repository"
+
+	"github.com/go-errors/errors"
 
 	"testing"
 

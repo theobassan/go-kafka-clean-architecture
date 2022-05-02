@@ -1,7 +1,7 @@
 package sql_gorm
 
 import (
-	"errors"
+	"github.com/go-errors/errors"
 
 	"go-kafka-clean-architecture/app/entities"
 	"go-kafka-clean-architecture/app/interfaces/database"
@@ -21,7 +21,7 @@ func (repository *productRepository) FindAll() ([]*entities.Product, error) {
 	modelProducts := []*model.Product{}
 	err := repository.sqlGorm.Find(&modelProducts).Error
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	products := []*entities.Product{}
@@ -46,7 +46,7 @@ func (repository *productRepository) Create(product *entities.Product) (*int64, 
 
 	err := repository.sqlGorm.Create(&modelProduct).Error
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return modelProduct.ID, nil

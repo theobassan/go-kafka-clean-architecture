@@ -1,10 +1,11 @@
 package sql_handler
 
 import (
-	"errors"
 	"go-kafka-clean-architecture/app/entities"
 	"go-kafka-clean-architecture/app/interfaces/database"
 	"go-kafka-clean-architecture/app/usecases/repository"
+
+	"github.com/go-errors/errors"
 )
 
 type productRepository struct {
@@ -25,12 +26,12 @@ func (repository *productRepository) Create(product *entities.Product) (*int64, 
 
 	result, err := repository.sqlHandler.Exec(query, product.ID, product.Type, product.Name)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	id, err := result.LastInsertId()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return &id, nil
@@ -47,7 +48,7 @@ func (repository *productRepository) FindAll() ([]*entities.Product, error) {
 	`
 	rows, err := repository.sqlHandler.Query(query)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 	defer rows.Close()
 
@@ -58,7 +59,7 @@ func (repository *productRepository) FindAll() ([]*entities.Product, error) {
 		var name string
 		err = rows.Scan(&externalId, &productType, &name)
 		if !errors.Is(err, nil) {
-			return nil, err
+			return nil, errors.Wrap(err, 1)
 		}
 		product := &entities.Product{
 			ID:   &externalId,
@@ -70,7 +71,7 @@ func (repository *productRepository) FindAll() ([]*entities.Product, error) {
 
 	err = rows.Err()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return products, nil

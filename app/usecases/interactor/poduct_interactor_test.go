@@ -1,15 +1,14 @@
 package interactor
 
 import (
-	"errors"
 	"go-kafka-clean-architecture/app/entities"
 	"go-kafka-clean-architecture/app/usecases/gateway"
 	"go-kafka-clean-architecture/app/usecases/repository"
 	"go-kafka-clean-architecture/app/usecases/translator"
 	"strconv"
-
 	"testing"
 
+	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 )
 

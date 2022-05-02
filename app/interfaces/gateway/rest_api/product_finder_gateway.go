@@ -2,13 +2,14 @@ package rest_api
 
 import (
 	"encoding/json"
-	"errors"
 	"go-kafka-clean-architecture/app/entities"
 	"go-kafka-clean-architecture/app/interfaces/api"
 	"go-kafka-clean-architecture/app/interfaces/gateway/rest_api/model"
 	"go-kafka-clean-architecture/app/usecases/gateway"
 	"io/ioutil"
 	"strconv"
+
+	"github.com/go-errors/errors"
 )
 
 type productGateway struct {
@@ -23,18 +24,18 @@ func (gateway *productGateway) FindById(id *int64) (*entities.Product, error) {
 
 	response, err := gateway.restAPI.Get("product?id=" + strconv.FormatInt(*id, 10))
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	responseBody, err := ioutil.ReadAll(response.Body)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	var product model.Product
 	err = json.Unmarshal(responseBody, &product)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return &entities.Product{

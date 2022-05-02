@@ -1,17 +1,18 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	event_context_interfaces "go-kafka-clean-architecture/app/command/controller/event_context"
+	http_context_interfaces "go-kafka-clean-architecture/app/command/controller/http_context"
 	"go-kafka-clean-architecture/app/infrastructure/api/event_api"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_gorm"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_handler"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
-	event_context_interfaces "go-kafka-clean-architecture/app/input/controller/event_context"
-	http_context_interfaces "go-kafka-clean-architecture/app/input/controller/http_context"
 	"go-kafka-clean-architecture/registry"
+
+	"github.com/go-errors/errors"
 
 	"github.com/go-sql-driver/mysql"
 	_ "gorm.io/driver/postgres"

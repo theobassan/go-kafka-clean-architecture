@@ -1,11 +1,11 @@
-package http_context
+package json_context
 
 import (
 	"encoding/json"
+	"go-kafka-clean-architecture/app/command/controller/json_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/controller/http_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -27,9 +27,9 @@ func TestProductTranslatedControllerFindAll_shoudlFindAll(t *testing.T) {
 	productTranslatedInteractorMock.On("FindAll").Return(products, nil)
 	productTranslatedController := NewProductTranslatedController(productTranslatedInteractorMock)
 
-	request := httptest.NewRequest(http.MethodGet, "/productstranslated", nil)
+	request := httptest.NewRequest(http.MethodGet, "/products", nil)
 	responseWriter := httptest.NewRecorder()
-	context := router.NewHttpContextMock(responseWriter, request)
+	context := router.NewJsonContextMock(responseWriter, request)
 
 	modelProduct := &model.Product{
 		ID:   &productID,

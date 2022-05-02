@@ -1,7 +1,7 @@
 package json_context
 
 import (
-	"go-kafka-clean-architecture/app/input/controller/json_context"
+	"go-kafka-clean-architecture/app/command/controller/json_context"
 	"log"
 	"strconv"
 

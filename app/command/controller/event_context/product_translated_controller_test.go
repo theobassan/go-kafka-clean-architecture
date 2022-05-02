@@ -1,10 +1,10 @@
 package event_context
 
 import (
+	"go-kafka-clean-architecture/app/command/controller/event_context/model"
+	"go-kafka-clean-architecture/app/command/router"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/controller/event_context/model"
-	"go-kafka-clean-architecture/app/input/router"
-	"go-kafka-clean-architecture/app/input/usecases"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

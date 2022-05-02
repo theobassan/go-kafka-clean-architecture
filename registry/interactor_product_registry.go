@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"go-kafka-clean-architecture/app/input/usecases"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/interfaces/api"
 	"go-kafka-clean-architecture/app/interfaces/database"
 	"go-kafka-clean-architecture/app/usecases/interactor"

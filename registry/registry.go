@@ -1,8 +1,8 @@
 package registry
 
 import (
-	"go-kafka-clean-architecture/app/input/controller/event_context"
-	"go-kafka-clean-architecture/app/input/controller/http_context"
+	"go-kafka-clean-architecture/app/command/controller/event_context"
+	"go-kafka-clean-architecture/app/command/controller/http_context"
 	"go-kafka-clean-architecture/app/interfaces/api"
 	"go-kafka-clean-architecture/app/interfaces/database"
 )

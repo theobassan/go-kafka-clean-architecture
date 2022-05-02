@@ -1,10 +1,11 @@
 package interactor
 
 import (
-	"errors"
+	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
-	"go-kafka-clean-architecture/app/input/usecases"
 	"go-kafka-clean-architecture/app/usecases/repository"
+
+	"github.com/go-errors/errors"
 )
 
 type productTranslatedInteractor struct {
@@ -18,7 +19,7 @@ func NewProductTranslatedInteractor(productTranslatedRepository repository.Produ
 func (interactor *productTranslatedInteractor) Create(product *entities.Product) (*int64, error) {
 	createdId, err := interactor.productTranslatedRepository.Create(product)
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return createdId, nil
@@ -27,7 +28,7 @@ func (interactor *productTranslatedInteractor) Create(product *entities.Product)
 func (interactor *productTranslatedInteractor) FindAll() ([]*entities.Product, error) {
 	products, err := interactor.productTranslatedRepository.FindAll()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return products, nil

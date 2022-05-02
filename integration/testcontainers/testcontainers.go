@@ -2,7 +2,6 @@ package testcontainers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"go-kafka-clean-architecture/app/infrastructure/api/event_api"
 	"go-kafka-clean-architecture/app/infrastructure/database/sql_handler"
@@ -10,12 +9,9 @@ import (
 	"go-kafka-clean-architecture/app/interfaces/database"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/docker/go-connections/nat"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
-	_ "github.com/lib/pq"
+	"github.com/go-errors/errors"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -30,7 +26,7 @@ func SetupMySql(ctx context.Context) (testcontainers.Container, error) {
 
 	seedDataPath, err := os.Getwd()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 	schema := seedDataPath + "/db-data/mysql-schema.sql"
 	config := seedDataPath + "/db-data/mysql.cnf"
@@ -57,7 +53,7 @@ func SetupMySql(ctx context.Context) (testcontainers.Container, error) {
 		Started:          true,
 	})
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return mySqlC, nil
@@ -67,7 +63,7 @@ func SetupSQLHandlerMySql(ctx context.Context) (database.SQLHandler, testcontain
 
 	mySqlC, err := SetupMySql(ctx)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	host, _ := mySqlC.Host(ctx)
@@ -77,7 +73,8 @@ func SetupSQLHandlerMySql(ctx context.Context) (database.SQLHandler, testcontain
 
 	mySqlDb, err := sql_handler.NewSQLDatabase("mysql", connectionString)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		mySqlC.Terminate(ctx)
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	return mySqlDb, mySqlC, nil
@@ -87,14 +84,13 @@ func SetupPostgres(ctx context.Context) (testcontainers.Container, error) {
 
 	seedDataPath, err := os.Getwd()
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 	schema := seedDataPath + "/db-data/postgres-schema.sql"
 
 	req := testcontainers.ContainerRequest{
 		Image:        "postgres:latest",
 		ExposedPorts: []string{"5432/tcp"},
-		Cmd:          []string{"postgres", "-c", "fsync=off"},
 		Env: map[string]string{
 			"POSTGRES_DB":       dbSqlName,
 			"POSTGRES_USER":     dbSqlUsername,
@@ -112,7 +108,7 @@ func SetupPostgres(ctx context.Context) (testcontainers.Container, error) {
 		Started:          true,
 	})
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return postgresC, nil
@@ -122,19 +118,24 @@ func SetupSQLHandlerPostgres(ctx context.Context) (database.SQLHandler, testcont
 
 	postgresC, err := SetupPostgres(ctx)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	host, _ := postgresC.Host(ctx)
 	p, _ := postgresC.MappedPort(ctx, nat.Port("5432/tcp"))
 	port := strconv.Itoa(p.Int())
 
-	//connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbSqlUsername, dbSqlPassword, host, port, dbSqlName)
-	connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
+	connectionString := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbSqlUsername, dbSqlPassword, host, port, dbSqlName)
+	//connectionString := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
+	//connectionString := fmt.Sprintf("PGHOST=%s PGPORT=%s PGUSER=%s PGPASSWORD=%s PGSSLMODE=disable PGDATABASE=%s", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
+
+	//connectionString := fmt.Sprintf("%s:%s/%s?user=%s&password=%s", host, port, dbSqlName, dbSqlUsername, dbSqlPassword)
+	fmt.Println(connectionString)
 
 	postgresDb, err := sql_handler.NewSQLDatabase("postgres", connectionString)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		postgresC.Terminate(ctx)
+		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	return postgresDb, postgresC, nil
@@ -165,7 +166,7 @@ func SetupZookeeper(ctx context.Context, networkName string) (testcontainers.Con
 		Started:          true,
 	})
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return zookeeperC, nil
@@ -208,13 +209,13 @@ func SetupKafka(ctx context.Context, zookeeperHost string, zookeeperPort string,
 		Started:          true,
 	})
 	if !errors.Is(err, nil) {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return kafkaC, nil
 }
 
-func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container, error) {
+func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container, testcontainers.Container, error) {
 	networkName := "kafka-network"
 	network, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
@@ -226,13 +227,13 @@ func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container,
 		},
 	})
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, 1)
 	}
 	defer network.Remove(ctx)
 
 	zookeeperC, err := SetupZookeeper(ctx, networkName)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		return nil, nil, nil, errors.Wrap(err, 1)
 	}
 	defer zookeeperC.Terminate(ctx)
 
@@ -242,7 +243,8 @@ func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container,
 
 	kafkaC, err := SetupKafka(ctx, zookeeperHost, zookeeperPort, networkName)
 	if !errors.Is(err, nil) {
-		return nil, nil, err
+		zookeeperC.Terminate(ctx)
+		return nil, nil, nil, errors.Wrap(err, 1)
 	}
 	defer kafkaC.Terminate(ctx)
 
@@ -253,43 +255,5 @@ func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container,
 
 	eventAPI := event_api.NewKafkaAPI(connectionString)
 
-	return eventAPI, kafkaC, nil
-}
-
-func SetupKafkaCompose(ctx context.Context) (*testcontainers.LocalDockerCompose, error) {
-	seedDataPath, err := os.Getwd()
-	if !errors.Is(err, nil) {
-		return nil, err
-	}
-
-	/*port, _ := nat.NewPort("", strconv.Itoa(9092))
-	if !errors.Is(err, nil) {
-		return nil, err
-	}*/
-
-	kafkaC := testcontainers.NewLocalDockerCompose(
-		[]string{seedDataPath + "/testcontainers/docker-compose.yml"},
-		strings.ToLower(uuid.New().String()),
-	)
-	//kafkaC.WaitForService("broker", wait.ForListeningPort(port))
-
-	err = kafkaC.WithCommand([]string{"up", "-d", "broker"}).Invoke().Error
-	if !errors.Is(err, nil) {
-		return nil, err
-	}
-
-	return kafkaC, nil
-}
-
-func SetupEventAPICompose(ctx context.Context) (api.EventAPI, *testcontainers.LocalDockerCompose, error) {
-
-	kafkaC, err := SetupKafkaCompose(ctx)
-	if !errors.Is(err, nil) {
-		return nil, nil, err
-	}
-	//defer kafkaC.Down(ctx)
-
-	eventAPI := event_api.NewKafkaAPI("localhost:9092")
-
-	return eventAPI, kafkaC, nil
+	return eventAPI, zookeeperC, kafkaC, nil
 }
