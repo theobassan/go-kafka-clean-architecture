@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"fmt"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
 	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
@@ -32,6 +33,7 @@ type GnomockSQLHandlerMySQL struct {
 	kafkaC   *gnomock.Container
 
 	serverURL string
+	productID int64
 
 	err error
 }
@@ -54,8 +56,11 @@ func (suite *GnomockSQLHandlerMySQL) SetupSuite() {
 	logger := logger.NewDebugLogger()
 
 	kafkaConnectionString := suite.kafkaC.Address(kafka.BrokerPort)
+
 	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
 	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+
+	suite.productID = int64(123)
 }
 
 func (suite *GnomockSQLHandlerMySQL) TearDownSuite() {
@@ -68,19 +73,18 @@ func (suite *GnomockSQLHandlerMySQL) TearDownSuite() {
 }
 
 func (suite *GnomockSQLHandlerMySQL) TestCreate() {
-	test.TestCreate(suite.T(), suite.serverURL)
+	test.TestCreate(suite.T(), suite.serverURL, suite.productID)
 }
 
 func (suite *GnomockSQLHandlerMySQL) TestFindAll() {
-	productID := int64(123)
-	productType := "Type 123"
-	productName := "Name 123"
 
-	productTranslatedID := int64(123)
-	productTranslatedType := "Type 123 Brasil"
-	productTranslatedName := "Name 123 Brasil"
+	productType := fmt.Sprintf("Type %d", suite.productID)
+	productName := fmt.Sprintf("Name %d", suite.productID)
 
-	test.TestFindAll(suite.T(), suite.serverURL, &productID, &productType, &productName, &productTranslatedID, &productTranslatedType, &productTranslatedName)
+	productTranslatedType := fmt.Sprintf("Type %d Brasil", suite.productID)
+	productTranslatedName := fmt.Sprintf("Name %d Brasil", suite.productID)
+
+	test.TestFindAll(suite.T(), suite.serverURL, &suite.productID, &productType, &productName, &suite.productID, &productTranslatedType, &productTranslatedName)
 }
 
 func TestExampleTestSuite(t *testing.T) {

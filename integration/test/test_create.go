@@ -15,9 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreate(t *testing.T, serverURL string) {
-
-	productID := int64(123)
+func TestCreate(t *testing.T, serverURL string, productID int64) {
 	product := &model.Product{
 		ID: &productID,
 	}

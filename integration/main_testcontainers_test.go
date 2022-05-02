@@ -43,7 +43,7 @@ func TestCreate_testcontainers_mysql(t *testing.T) {
 	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, "localhost:9092", logger)
 	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
-	test.TestCreate(t, serverURL)
+	test.TestCreate(t, serverURL, int64(123))
 
 	err = mySqlC.Terminate(ctx)
 	require.NoError(t, err)

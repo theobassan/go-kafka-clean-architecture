@@ -43,7 +43,7 @@ func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
 	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
-	test.TestCreate(t, serverURL)
+	test.TestCreate(t, serverURL, int64(123))
 
 	err = gnomocktest.Stop(mySqlC)
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
 	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
 	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
 
-	test.TestCreate(t, serverURL)
+	test.TestCreate(t, serverURL, int64(123))
 
 	err = gnomocktest.Stop(postgresC)
 	require.NoError(t, err)
