@@ -6,7 +6,7 @@ import (
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
 	"go-kafka-clean-architecture/app/interfaces/repository/sql_gorm/model"
-	"go-kafka-clean-architecture/integration/gnomock"
+	"go-kafka-clean-architecture/integration/gnomocktest"
 	"go-kafka-clean-architecture/integration/test"
 	"go-kafka-clean-architecture/registry"
 	"strconv"
@@ -22,13 +22,13 @@ import (
 func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	mySqlDb, mySqlC, err := gnomock.SetupSQLHandlerMySQL()
+	mySqlDb, mySqlC, err := gnomocktest.SetupSQLHandlerMySQL()
 	require.NoError(t, err)
-	//defer gnomock.Stop(mySqlC)
+	//defer gnomocktest.Stop(mySqlC)
 
-	kafkaAPI, kafkaC, err := gnomock.SetupEventAPI()
+	kafkaAPI, kafkaC, err := gnomocktest.SetupEventAPI()
 	require.NoError(t, err)
-	//defer gnomock.Stop(kafkaC)
+	//defer gnomocktest.Stop(kafkaC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -45,23 +45,23 @@ func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 
 	test.TestCreate(t, serverURL)
 
-	err = gnomock.Stop(mySqlC)
+	err = gnomocktest.Stop(mySqlC)
 	require.NoError(t, err)
 
-	err = gnomock.Stop(kafkaC)
+	err = gnomocktest.Stop(kafkaC)
 	require.NoError(t, err)
 }
 
 func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomock.SetupSQLHandlerPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSQLHandlerPostgres()
 	require.NoError(t, err)
-	//defer gnomock.Stop(postgresC)
+	//defer gnomocktest.Stop(postgresC)
 
-	kafkaAPI, kafkaC, err := gnomock.SetupEventAPI()
+	kafkaAPI, kafkaC, err := gnomocktest.SetupEventAPI()
 	require.NoError(t, err)
-	//defer gnomock.Stop(kafkaC)
+	//defer gnomocktest.Stop(kafkaC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -78,19 +78,19 @@ func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
 
 	test.TestCreate(t, serverURL)
 
-	err = gnomock.Stop(postgresC)
+	err = gnomocktest.Stop(postgresC)
 	require.NoError(t, err)
 
-	err = gnomock.Stop(kafkaC)
+	err = gnomocktest.Stop(kafkaC)
 	require.NoError(t, err)
 }
 
 func TestFindAll_gnomock_mqsql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	mySqlDb, mySqlC, err := gnomock.SetupSQLHandlerMySQL()
+	mySqlDb, mySqlC, err := gnomocktest.SetupSQLHandlerMySQL()
 	require.NoError(t, err)
-	//defer gnomock.Stop(mySqlC)
+	//defer gnomocktest.Stop(mySqlC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -120,18 +120,18 @@ func TestFindAll_gnomock_mqsql_sql_handler(t *testing.T) {
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
-	test.TestFindAll(t, serverURL)
+	test.TestFindAll(t, serverURL, &productID, &productType, &productName, &productID, &productType, &productName)
 
-	err = gnomock.Stop(mySqlC)
+	err = gnomocktest.Stop(mySqlC)
 	require.NoError(t, err)
 }
 
 func TestFindAll_gnomock_postgres_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomock.SetupSQLHandlerPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSQLHandlerPostgres()
 	require.NoError(t, err)
-	//defer gnomock.Stop(postgresC)
+	//defer gnomocktest.Stop(postgresC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -161,18 +161,18 @@ func TestFindAll_gnomock_postgres_sql_handler(t *testing.T) {
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
-	test.TestFindAll(t, serverURL)
+	test.TestFindAll(t, serverURL, &productID, &productType, &productName, &productID, &productType, &productName)
 
-	err = gnomock.Stop(postgresC)
+	err = gnomocktest.Stop(postgresC)
 	require.NoError(t, err)
 }
 
 func TestFindAll_gnomock_postgres_sql_gorm(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomock.SetupSQLGormPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSQLGormPostgres()
 	require.NoError(t, err)
-	//defer gnomock.Stop(postgresC)
+	//defer gnomocktest.Stop(postgresC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
@@ -202,8 +202,8 @@ func TestFindAll_gnomock_postgres_sql_gorm(t *testing.T) {
 	err = postgresDb.Create(&modelTranslatedProduct).Error
 	require.NoError(t, err)
 
-	test.TestFindAll(t, serverURL)
+	test.TestFindAll(t, serverURL, &productID, &productType, &productName, &productID, &productType, &productName)
 
-	err = gnomock.Stop(postgresC)
+	err = gnomocktest.Stop(postgresC)
 	require.NoError(t, err)
 }

@@ -1,4 +1,4 @@
-package gnomock
+package gnomocktest
 
 import (
 	"fmt"

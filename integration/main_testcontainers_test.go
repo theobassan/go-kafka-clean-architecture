@@ -91,7 +91,7 @@ func TestFindAll_testcontainers_mysql(t *testing.T) {
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
-	test.TestFindAll(t, serverURL)
+	test.TestFindAll(t, serverURL, &productID, &productType, &productName, &productID, &productType, &productName)
 
 	err = mySqlC.Terminate(ctx)
 	require.NoError(t, err)
@@ -133,7 +133,7 @@ func TestFindAll_testcontainers_postgres(t *testing.T) {
 	`, productID, productType, productName)
 	require.NoError(t, err)
 
-	test.TestFindAll(t, serverURL)
+	test.TestFindAll(t, serverURL, &productID, &productType, &productName, &productID, &productType, &productName)
 
 	err = postgresC.Terminate(ctx)
 	require.NoError(t, err)
