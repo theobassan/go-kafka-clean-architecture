@@ -7,7 +7,7 @@ import (
 	"go-kafka-clean-architecture/app/entities"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductControllerCreate_shoudlCreate(t *testing.T) {
@@ -30,7 +30,7 @@ func TestProductControllerCreate_shoudlCreate(t *testing.T) {
 	productController := NewProductTranslatedController(productTranslatedInteractorMock)
 
 	err := productController.Create(eventContextMock)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	eventContextMock.AssertExpectations(t)
 	productTranslatedInteractorMock.AssertExpectations(t)

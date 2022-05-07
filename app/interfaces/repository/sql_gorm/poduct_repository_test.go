@@ -8,9 +8,10 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestProductRepositoryCreate_shoudlCreateInMySQL(t *testing.T) {
+func TestProductRepositoryCreate_shoudlCreateInMySql(t *testing.T) {
 	productID := int64(123)
 	productType := "Type"
 	productName := "Name"
@@ -22,7 +23,7 @@ func TestProductRepositoryCreate_shoudlCreateInMySQL(t *testing.T) {
 	}
 
 	db, dbMock, err := database.NewSqlGormMock("mysql")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	createdID := int64(1)
 	dbMock.ExpectBegin()
@@ -35,7 +36,8 @@ func TestProductRepositoryCreate_shoudlCreateInMySQL(t *testing.T) {
 	productRepository := NewProductRepository(db)
 
 	returnedId, err := productRepository.Create(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	assert.Equal(t, *returnedId, createdID)
 }
 
@@ -51,7 +53,7 @@ func TestProductRepositoryCreate_shoudlCreateInPostres(t *testing.T) {
 	}
 
 	db, dbMock, err := database.NewSqlGormMock("postgres")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	createdID := int64(1)
 	dbMock.ExpectBegin()
@@ -65,18 +67,19 @@ func TestProductRepositoryCreate_shoudlCreateInPostres(t *testing.T) {
 	productRepository := NewProductRepository(db)
 
 	returnedId, err := productRepository.Create(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	assert.Equal(t, *returnedId, createdID)
 }
 
-func TestProductRepositoryFindAll_shoudlFindAllInMySQL(t *testing.T) {
+func TestProductRepositoryFindAll_shoudlFindAllInMySql(t *testing.T) {
 	productID := int64(1)
 	productExternalID := int64(123)
 	productType := "Type"
 	productName := "Name"
 
 	db, dbMock, err := database.NewSqlGormMock("mysql")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	dbMock.ExpectQuery(
 		regexp.QuoteMeta("SELECT * FROM `products`")).
@@ -86,7 +89,8 @@ func TestProductRepositoryFindAll_shoudlFindAllInMySQL(t *testing.T) {
 	productRepository := NewProductRepository(db)
 
 	returnedProduct, err := productRepository.FindAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	assert.Equal(t, *returnedProduct[0].ID, productExternalID)
 	assert.Equal(t, *returnedProduct[0].Type, productType)
 	assert.Equal(t, *returnedProduct[0].Name, productName)
@@ -99,7 +103,7 @@ func TestProductRepositoryFindAll_shoudlFindAllInPostgres(t *testing.T) {
 	productName := "Name"
 
 	db, dbMock, err := database.NewSqlGormMock("postgres")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	dbMock.ExpectQuery(
 		regexp.QuoteMeta(`SELECT * FROM "products"`)).
@@ -109,7 +113,7 @@ func TestProductRepositoryFindAll_shoudlFindAllInPostgres(t *testing.T) {
 	productRepository := NewProductRepository(db)
 
 	returnedProducts, err := productRepository.FindAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Len(t, returnedProducts, 1)
 	assert.Equal(t, *returnedProducts[0].ID, productExternalID)

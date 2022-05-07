@@ -13,16 +13,16 @@ import (
 )
 
 type productGateway struct {
-	restAPI api.RestAPI
+	restApi api.RestApi
 }
 
-func NewProductFinderGateway(restAPI api.RestAPI) gateway.ProductFinderGateway {
-	return &productGateway{restAPI}
+func NewProductFinderGateway(restApi api.RestApi) gateway.ProductFinderGateway {
+	return &productGateway{restApi}
 }
 
 func (gateway *productGateway) FindById(id *int64) (*entities.Product, error) {
 
-	response, err := gateway.restAPI.Get("product?id=" + strconv.FormatInt(*id, 10))
+	response, err := gateway.restApi.Get("product?id=" + strconv.FormatInt(*id, 10))
 	if !errors.Is(err, nil) {
 		return nil, errors.Wrap(err, 1)
 	}

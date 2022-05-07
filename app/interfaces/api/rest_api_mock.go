@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type RestAPIMock struct {
+type RestApiMock struct {
 	mock.Mock
 }
 
-func (m *RestAPIMock) Get(url string) (*http.Response, error) {
+func (m *RestApiMock) Get(url string) (*http.Response, error) {
 	ret := m.Called(url)
 
 	var r0 *http.Response

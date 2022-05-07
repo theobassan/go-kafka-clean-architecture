@@ -9,19 +9,14 @@ import (
 	"go-kafka-clean-architecture/app/command/controller/json_context/model"
 	"go-kafka-clean-architecture/app/command/router"
 	"go-kafka-clean-architecture/app/command/usecases"
+	"go-kafka-clean-architecture/app/infrastructure/command/json_context"
 )
 
 type productController struct {
 	produtInteractor usecases.ProductInteractor
 }
 
-type ProductController interface {
-	Create(context router.JsonContext) error
-	FindAll(context router.JsonContext) error
-	Get(context router.JsonContext) error
-}
-
-func NewProductController(productIteractor usecases.ProductInteractor) ProductController {
+func NewProductController(productIteractor usecases.ProductInteractor) json_context.ProductController {
 	return &productController{productIteractor}
 }
 

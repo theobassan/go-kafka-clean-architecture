@@ -6,10 +6,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-type NewProductRepositoryMock struct {
-}
-
-func NewSQLHandlerMock() (SQLHandler, sqlmock.Sqlmock, error) {
+func NewSqlHandlerMock() (SqlHandler, sqlmock.Sqlmock, error) {
 	db, mock, err := sqlmock.New()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)

@@ -1,10 +1,12 @@
 package http_context
 
+import "go-kafka-clean-architecture/app/infrastructure/command/http_context"
+
 type AppController struct {
-	ProductController           ProductController
-	ProductTranslatedController ProductTranslatedController
+	ProductController           http_context.ProductController
+	ProductTranslatedController http_context.ProductTranslatedController
 }
 
-func NewAppController(ProductController ProductController, ProductTranslatedController ProductTranslatedController) *AppController {
-	return &AppController{ProductController, ProductTranslatedController}
+func NewAppController(productController http_context.ProductController, productTranslatedController http_context.ProductTranslatedController) *AppController {
+	return &AppController{productController, productTranslatedController}
 }

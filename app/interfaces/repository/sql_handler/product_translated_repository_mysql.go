@@ -9,10 +9,10 @@ import (
 )
 
 type productTranslatedRepositoryMySql struct {
-	sqlHandler database.SQLHandler
+	sqlHandler database.SqlHandler
 }
 
-func NewProductTranslatedRepositoryMySql(sqlHandler database.SQLHandler) repository.ProductTranslatedRepository {
+func NewProductTranslatedRepositoryMySql(sqlHandler database.SqlHandler) repository.ProductTranslatedRepository {
 	return &productTranslatedRepositoryMySql{sqlHandler}
 }
 

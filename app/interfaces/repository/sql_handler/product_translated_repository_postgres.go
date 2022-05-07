@@ -9,10 +9,10 @@ import (
 )
 
 type productTranslatedRepositoryPostgres struct {
-	sqlHandler database.SQLHandler
+	sqlHandler database.SqlHandler
 }
 
-func NewProductTranslatedRepositoryPostgres(sqlHandler database.SQLHandler) repository.ProductTranslatedRepository {
+func NewProductTranslatedRepositoryPostgres(sqlHandler database.SqlHandler) repository.ProductTranslatedRepository {
 	return &productTranslatedRepositoryPostgres{sqlHandler}
 }
 

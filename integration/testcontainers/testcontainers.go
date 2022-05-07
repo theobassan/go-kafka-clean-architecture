@@ -35,16 +35,16 @@ func SetupMySql(ctx context.Context) (testcontainers.Container, error) {
 		Image:        "mysql:latest",
 		ExposedPorts: []string{"3306/tcp"},
 		Env: map[string]string{
-			"MYSQL_DATABASE":      dbSqlName,
-			"MYSQL_USER":          dbSqlUsername,
-			"MYSQL_PASSWORD":      dbSqlPassword,
-			"MYSQL_ROOT_PASSWORD": dbSqlPassword,
+			"MYSql_DATABASE":      dbSqlName,
+			"MYSql_USER":          dbSqlUsername,
+			"MYSql_PASSWORD":      dbSqlPassword,
+			"MYSql_ROOT_PASSWORD": dbSqlPassword,
 		},
 		Mounts: testcontainers.ContainerMounts{
 			{Source: testcontainers.GenericBindMountSource{HostPath: schema}, Target: "/docker-entrypoint-initdb.d/mysql-schema.sql"},
 			{Source: testcontainers.GenericBindMountSource{HostPath: config}, Target: "/etc/mysql/conf.d/my.cnf"},
 		},
-		WaitingFor: wait.ForLog("port: 3306  MySQL Community Server - GPL"),
+		WaitingFor: wait.ForLog("port: 3306  MySql Community Server - GPL"),
 		SkipReaper: true,
 	}
 
@@ -59,7 +59,7 @@ func SetupMySql(ctx context.Context) (testcontainers.Container, error) {
 	return mySqlC, nil
 }
 
-func SetupSQLHandlerMySql(ctx context.Context) (database.SQLHandler, testcontainers.Container, error) {
+func SetupSqlHandlerMySql(ctx context.Context) (database.SqlHandler, testcontainers.Container, error) {
 
 	mySqlC, err := SetupMySql(ctx)
 	if !errors.Is(err, nil) {
@@ -71,7 +71,7 @@ func SetupSQLHandlerMySql(ctx context.Context) (database.SQLHandler, testcontain
 	port := strconv.Itoa(p.Int())
 	connectionString := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbSqlUsername, dbSqlPassword, host, port, dbSqlName)
 
-	mySqlDb, err := sql_handler.NewSQLDatabase("mysql", connectionString)
+	mySqlDb, err := sql_handler.NewSqlDatabase("mysql", connectionString)
 	if !errors.Is(err, nil) {
 		mySqlC.Terminate(ctx)
 		return nil, nil, errors.Wrap(err, 1)
@@ -114,7 +114,7 @@ func SetupPostgres(ctx context.Context) (testcontainers.Container, error) {
 	return postgresC, nil
 }
 
-func SetupSQLHandlerPostgres(ctx context.Context) (database.SQLHandler, testcontainers.Container, error) {
+func SetupSqlHandlerPostgres(ctx context.Context) (database.SqlHandler, testcontainers.Container, error) {
 
 	postgresC, err := SetupPostgres(ctx)
 	if !errors.Is(err, nil) {
@@ -130,7 +130,7 @@ func SetupSQLHandlerPostgres(ctx context.Context) (database.SQLHandler, testcont
 	//connectionString := fmt.Sprintf("PGHOST=%s PGPORT=%s PGUSER=%s PGPASSWORD=%s PGSSLMODE=disable PGDATABASE=%s", host, port, dbSqlUsername, dbSqlPassword, dbSqlName)
 	//connectionString := fmt.Sprintf("%s:%s/%s?user=%s&password=%s", host, port, dbSqlName, dbSqlUsername, dbSqlPassword)
 
-	postgresDb, err := sql_handler.NewSQLDatabase("postgres", connectionString)
+	postgresDb, err := sql_handler.NewSqlDatabase("postgres", connectionString)
 	if !errors.Is(err, nil) {
 		postgresC.Terminate(ctx)
 		return nil, nil, errors.Wrap(err, 1)
@@ -213,7 +213,7 @@ func SetupKafka(ctx context.Context, zookeeperHost string, zookeeperPort string,
 	return kafkaC, nil
 }
 
-func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container, testcontainers.Container, error) {
+func SetupEventApi(ctx context.Context) (api.EventApi, testcontainers.Container, testcontainers.Container, error) {
 	networkName := "kafka-network"
 	network, err := testcontainers.GenericNetwork(ctx, testcontainers.GenericNetworkRequest{
 		NetworkRequest: testcontainers.NetworkRequest{
@@ -251,7 +251,7 @@ func SetupEventAPI(ctx context.Context) (api.EventAPI, testcontainers.Container,
 	kafkaPort := strconv.Itoa(kafkaP.Int())
 	connectionString := fmt.Sprintf("%s:%s", kafkaHost, kafkaPort)
 
-	eventAPI := event_api.NewKafkaAPI(connectionString)
+	eventApi := event_api.NewKafkaApi(connectionString)
 
-	return eventAPI, zookeeperC, kafkaC, nil
+	return eventApi, zookeeperC, kafkaC, nil
 }

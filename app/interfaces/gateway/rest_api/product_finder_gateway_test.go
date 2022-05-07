@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductFinderGatewayFindById_shoudlFindById(t *testing.T) {
@@ -23,22 +24,22 @@ func TestProductFinderGatewayFindById_shoudlFindById(t *testing.T) {
 		Name: &productName,
 	}
 	responseJson, err := json.Marshal(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mockResponse := &http.Response{
 		StatusCode: 200,
 		Body:       ioutil.NopCloser(bytes.NewReader(responseJson)),
 	}
 
-	restAPIMock := new(api.RestAPIMock)
-	restAPIMock.On("Get", "product?id=123").Return(mockResponse, nil)
+	restApiMock := new(api.RestApiMock)
+	restApiMock.On("Get", "product?id=123").Return(mockResponse, nil)
 
-	productFinderGateway := NewProductFinderGateway(restAPIMock)
+	productFinderGateway := NewProductFinderGateway(restApiMock)
 
 	returnedProuct, err := productFinderGateway.FindById(&productID)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	restAPIMock.AssertExpectations(t)
+	restApiMock.AssertExpectations(t)
 
 	assert.Equal(t, *returnedProuct.ID, productID)
 	assert.Equal(t, *returnedProuct.Type, productType)

@@ -7,7 +7,7 @@ import (
 	"github.com/go-errors/errors"
 )
 
-func NewSQLDatabase(driver, dataSource string) (database.SQLHandler, error) {
+func NewSqlDatabase(driver, dataSource string) (database.SqlHandler, error) {
 	sqlDB, err := sql.Open(driver, dataSource)
 	if !errors.Is(err, nil) {
 		return nil, errors.Wrap(err, 1)

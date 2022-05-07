@@ -2,13 +2,15 @@ package integration
 
 import (
 	"context"
+	"go-kafka-clean-architecture/app/command/controller/event_context"
+	"go-kafka-clean-architecture/app/command/controller/http_context"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
 	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
+	"go-kafka-clean-architecture/app/registry"
 	"go-kafka-clean-architecture/integration/test"
 	"go-kafka-clean-architecture/integration/testcontainers"
-	"go-kafka-clean-architecture/registry"
 	"strconv"
 	"testing"
 
@@ -22,26 +24,32 @@ func TestCreate_testcontainers_mysql(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
-	mySqlDb, mySqlC, err := testcontainers.SetupSQLHandlerMySql(ctx)
+	mySqlDb, mySqlC, err := testcontainers.SetupSqlHandlerMySql(ctx)
 	require.NoError(t, err)
 	//defer mySqlC.Terminate(ctx)
 
-	kafkaAPI, zookeeperC, kafkaC, err := testcontainers.SetupEventAPI(ctx)
+	kafkaApi, zookeeperC, kafkaC, err := testcontainers.SetupEventApi(ctx)
 	require.NoError(t, err)
 	//defer zookeeperC.Terminate(ctx)
 	//defer kafkaC.Terminate(ctx)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
-	restAPI := rest_api.NewHttpAPI(serverURL)
+	restApi := rest_api.NewHttpApi(serverURL)
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerMySqlEventApiBrasilProductController(restApi, mySqlDb, kafkaApi)
+	newHttpContextSqlHandlerMySqlProductTranslatedController := r.NewHttpContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController, newHttpContextSqlHandlerMySqlProductTranslatedController)
+
+	eventContextSqlHandlerMySqlProductTranslatedController := r.NewEventContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	eventAppController := event_context.NewAppController(eventContextSqlHandlerMySqlProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, "localhost:9092", logger)
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	kafkaConnectionString := "localhost:9092"
+	go event_context_infrastructure.StartKafkaRouter(eventAppController, kafkaConnectionString, logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	test.TestCreate(t, serverURL, int64(123))
 
@@ -59,17 +67,20 @@ func TestFindAll_testcontainers_mysql(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
-	mySqlDb, mySqlC, err := testcontainers.SetupSQLHandlerMySql(ctx)
+	mySqlDb, mySqlC, err := testcontainers.SetupSqlHandlerMySql(ctx)
 	require.NoError(t, err)
 	//defer mySqlC.Terminate(ctx)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(nil, mySqlDb, nil)
+	httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerMySqlEventApiBrasilProductController(nil, mySqlDb, nil)
+	newHttpContextSqlHandlerMySqlProductTranslatedController := r.NewHttpContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController, newHttpContextSqlHandlerMySqlProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
@@ -101,17 +112,20 @@ func TestFindAll_testcontainers_postgres(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 	ctx := context.Background()
 
-	postgresDb, postgresC, err := testcontainers.SetupSQLHandlerPostgres(ctx)
+	postgresDb, postgresC, err := testcontainers.SetupSqlHandlerPostgres(ctx)
 	require.NoError(t, err)
 	//defer postgresC.Terminate(ctx)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(nil, postgresDb, nil)
+	httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerMySqlEventApiBrasilProductController(nil, postgresDb, nil)
+	newHttpContextSqlHandlerMySqlProductTranslatedController := r.NewHttpContextSqlHandlerMySqlProductTranslatedController(postgresDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController, newHttpContextSqlHandlerMySqlProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"

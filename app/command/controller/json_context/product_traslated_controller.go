@@ -8,17 +8,14 @@ import (
 	"go-kafka-clean-architecture/app/command/controller/json_context/model"
 	"go-kafka-clean-architecture/app/command/router"
 	"go-kafka-clean-architecture/app/command/usecases"
+	"go-kafka-clean-architecture/app/infrastructure/command/json_context"
 )
 
 type productTranslatedController struct {
 	produtTranslatedInteractor usecases.ProductTranslatedInteractor
 }
 
-type ProductTranslatedController interface {
-	FindAll(context router.JsonContext) error
-}
-
-func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) ProductTranslatedController {
+func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) json_context.ProductTranslatedController {
 	return &productTranslatedController{productTranslatedIteractor}
 }
 

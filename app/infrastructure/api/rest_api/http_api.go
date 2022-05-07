@@ -5,14 +5,14 @@ import (
 	"net/http"
 )
 
-type httpAPI struct {
+type httpApi struct {
 	baseURL string
 }
 
-func NewHttpAPI(baseURL string) api.RestAPI {
-	return &httpAPI{baseURL}
+func NewHttpApi(baseURL string) api.RestApi {
+	return &httpApi{baseURL}
 }
 
-func (httpAPI *httpAPI) Get(url string) (*http.Response, error) {
-	return http.Get(httpAPI.baseURL + "/" + url)
+func (httpApi *httpApi) Get(url string) (*http.Response, error) {
+	return http.Get(httpApi.baseURL + "/" + url)
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func NewGormDatabase(dialect string, source string) (database.SQLGorm, error) {
+func NewGormDatabase(dialect string, source string) (database.SqlGorm, error) {
 
 	gormDB, err := gorm.Open(dialect, source)
 	if !errors.Is(err, nil) {

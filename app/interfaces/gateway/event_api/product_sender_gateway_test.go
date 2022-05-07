@@ -7,7 +7,7 @@ import (
 	"go-kafka-clean-architecture/app/interfaces/gateway/event_api/model"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductSenderGatewaySend_shoudlSend(t *testing.T) {
@@ -21,7 +21,7 @@ func TestProductSenderGatewaySend_shoudlSend(t *testing.T) {
 		Name: &productName,
 	}
 	value, err := json.Marshal(modelProduct)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	msg := struct {
 		Topic string
@@ -31,11 +31,11 @@ func TestProductSenderGatewaySend_shoudlSend(t *testing.T) {
 		Value: value,
 	}
 
-	eventAPIMock := new(api.EventAPIMock)
-	eventAPIMock.On("Bind", "product", value).Return(msg)
-	eventAPIMock.On("WriteMessage", msg).Return(nil)
+	eventApiMock := new(api.EventApiMock)
+	eventApiMock.On("Bind", "product", value).Return(msg)
+	eventApiMock.On("WriteMessage", msg).Return(nil)
 
-	productSenderGateway := NewProductSenderGateway(eventAPIMock)
+	productSenderGateway := NewProductSenderGateway(eventApiMock)
 
 	product := &entities.Product{
 		ID:   &productID,
@@ -43,7 +43,7 @@ func TestProductSenderGatewaySend_shoudlSend(t *testing.T) {
 		Name: &productName,
 	}
 	err = productSenderGateway.Send(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	eventAPIMock.AssertExpectations(t)
+	eventApiMock.AssertExpectations(t)
 }

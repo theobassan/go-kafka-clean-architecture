@@ -7,7 +7,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func NewSqlGormMock(dialect string) (SQLGorm, sqlmock.Sqlmock, error) {
+func NewSqlGormMock(dialect string) (SqlGorm, sqlmock.Sqlmock, error) {
 	db, mock, err := sqlmock.New()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)

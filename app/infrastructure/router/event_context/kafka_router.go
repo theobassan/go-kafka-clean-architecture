@@ -1,4 +1,4 @@
-package kafka
+package event_context
 
 import (
 	"context"

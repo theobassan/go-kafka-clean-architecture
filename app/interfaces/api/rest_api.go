@@ -2,6 +2,6 @@ package api
 
 import "net/http"
 
-type RestAPI interface {
+type RestApi interface {
 	Get(url string) (*http.Response, error)
 }

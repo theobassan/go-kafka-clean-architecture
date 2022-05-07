@@ -11,12 +11,12 @@ import (
 )
 
 type productGateway struct {
-	eventAPI api.EventAPI
+	eventApi api.EventApi
 	topic    string
 }
 
-func NewProductSenderGateway(eventAPI api.EventAPI) gateway.ProductSenderGateway {
-	return &productGateway{eventAPI, "product"}
+func NewProductSenderGateway(eventApi api.EventApi) gateway.ProductSenderGateway {
+	return &productGateway{eventApi, "product"}
 }
 
 func (publisher *productGateway) Send(product *entities.Product) error {
@@ -30,8 +30,8 @@ func (publisher *productGateway) Send(product *entities.Product) error {
 		return errors.Wrap(err, 1)
 	}
 
-	msg := publisher.eventAPI.Bind(publisher.topic, value)
-	err = publisher.eventAPI.WriteMessage(msg)
+	msg := publisher.eventApi.Bind(publisher.topic, value)
+	err = publisher.eventApi.WriteMessage(msg)
 	if !errors.Is(err, nil) {
 		return errors.Wrap(err, 1)
 	}

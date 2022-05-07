@@ -4,11 +4,11 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type EventAPIMock struct {
+type EventApiMock struct {
 	mock.Mock
 }
 
-func (m *EventAPIMock) Bind(topic string, value []byte) interface{} {
+func (m *EventApiMock) Bind(topic string, value []byte) interface{} {
 	ret := m.Called(topic, value)
 
 	var r0 interface{}
@@ -23,7 +23,7 @@ func (m *EventAPIMock) Bind(topic string, value []byte) interface{} {
 	return r0
 }
 
-func (m *EventAPIMock) WriteMessage(i interface{}) error {
+func (m *EventApiMock) WriteMessage(i interface{}) error {
 	ret := m.Called(i)
 
 	var r0 error

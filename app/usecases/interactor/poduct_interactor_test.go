@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductInteractorCreate_shoudlCreate(t *testing.T) {
@@ -35,7 +36,7 @@ func TestProductInteractorCreate_shoudlCreate(t *testing.T) {
 	)
 
 	returnedId, err := productInteractor.Create(&id)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	productFinderGatewayMock.AssertExpectations(t)
 	productRepositoryMock.AssertExpectations(t)
@@ -161,16 +162,14 @@ func TestProductInteractorFindAll_shouldFindAll(t *testing.T) {
 	)
 
 	returnedProducts, err := productInteractor.FindAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	productRepositoryMock.AssertExpectations(t)
 
 	assert.Len(t, returnedProducts, 1)
-
-	returnedProduct := returnedProducts[0]
-	assert.Equal(t, *returnedProduct.ID, productID)
-	assert.Equal(t, *returnedProduct.Type, productType)
-	assert.Equal(t, *returnedProduct.Name, productName)
+	assert.Equal(t, *returnedProducts[0].ID, productID)
+	assert.Equal(t, *returnedProducts[0].Type, productType)
+	assert.Equal(t, *returnedProducts[0].Name, productName)
 }
 
 func TestProductInteractorFindAll_shoudlReturnError_whenRepositoryReturnError(t *testing.T) {
@@ -192,9 +191,10 @@ func TestProductInteractorFindAll_shoudlReturnError_whenRepositoryReturnError(t 
 
 	returnedProducts, returnedErr := productInteractor.FindAll()
 	assert.Nil(t, returnedProducts)
-	assert.EqualError(t, returnedErr, err)
 
 	productFinderGatewayMock.AssertExpectations(t)
+
+	assert.EqualError(t, returnedErr, err)
 }
 
 func TestProductInteractorGet_shouldGet(t *testing.T) {
@@ -215,7 +215,7 @@ func TestProductInteractorGet_shouldGet(t *testing.T) {
 	)
 
 	returnedProduct, err := productInteractor.Get(&productID)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	assert.Equal(t, *returnedProduct.ID, productID)
 	assert.Equal(t, *returnedProduct.Type, productType)

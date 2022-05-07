@@ -7,10 +7,10 @@ services:
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: cleanarchitecture
-      MYSQL_USER: cleanarchitecture
-      MYSQL_PASSWORD: cleanarchitecture
-      MYSQL_ROOT_PASSWORD: example
+      MYSql_DATABASE: cleanarchitecture
+      MYSql_USER: cleanarchitecture
+      MYSql_PASSWORD: cleanarchitecture
+      MYSql_ROOT_PASSWORD: example
     volumes:
       - ./database/mysql:/var/lib/mysql
       - ./mysql.cnf:/etc/mysql/conf.d/my.cnf

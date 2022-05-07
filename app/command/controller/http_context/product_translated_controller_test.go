@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductTranslatedControllerFindAll_shoudlFindAll(t *testing.T) {
@@ -38,9 +39,10 @@ func TestProductTranslatedControllerFindAll_shoudlFindAll(t *testing.T) {
 	}
 	modelProducts := []*model.Product{modelProduct}
 	productsJSON, err := json.Marshal(modelProducts)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	productTranslatedController.FindAll(context)
+	err = productTranslatedController.FindAll(context)
+	require.NoError(t, err)
 
 	productTranslatedInteractorMock.AssertExpectations(t)
 

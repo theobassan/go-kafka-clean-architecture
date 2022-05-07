@@ -8,11 +8,11 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type kafkaAPI struct {
+type kafkaApi struct {
 	kafkaWriter *kafka.Writer
 }
 
-func NewKafkaAPI(kafkaURL string) api.EventAPI {
+func NewKafkaApi(kafkaURL string) api.EventApi {
 	//l := log.New(os.Stdout, "kafka writer: ", 0)
 	kafkaWriter := kafka.NewWriter(kafka.WriterConfig{
 		Brokers:  []string{kafkaURL},
@@ -20,15 +20,15 @@ func NewKafkaAPI(kafkaURL string) api.EventAPI {
 		//Logger:   l,
 	})
 
-	return &kafkaAPI{kafkaWriter}
+	return &kafkaApi{kafkaWriter}
 }
 
-func (kafkaAPI *kafkaAPI) WriteMessage(i interface{}) error {
+func (kafkaApi *kafkaApi) WriteMessage(i interface{}) error {
 	msg := i.(kafka.Message)
-	return kafkaAPI.kafkaWriter.WriteMessages(context.Background(), msg)
+	return kafkaApi.kafkaWriter.WriteMessages(context.Background(), msg)
 }
 
-func (kafkaAPI *kafkaAPI) Bind(topic string, value []byte) interface{} {
+func (kafkaApi *kafkaApi) Bind(topic string, value []byte) interface{} {
 	return kafka.Message{
 		Key:   []byte(strconv.Itoa(0)),
 		Topic: topic,

@@ -10,10 +10,10 @@ import (
 )
 
 type productRepository struct {
-	sqlGorm database.SQLGorm
+	sqlGorm database.SqlGorm
 }
 
-func NewProductRepository(sqlGorm database.SQLGorm) repository.ProductRepository {
+func NewProductRepository(sqlGorm database.SqlGorm) repository.ProductRepository {
 	return &productRepository{sqlGorm}
 }
 

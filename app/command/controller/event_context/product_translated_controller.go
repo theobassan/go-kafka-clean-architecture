@@ -7,17 +7,14 @@ import (
 	"go-kafka-clean-architecture/app/command/router"
 	"go-kafka-clean-architecture/app/command/usecases"
 	"go-kafka-clean-architecture/app/entities"
+	"go-kafka-clean-architecture/app/infrastructure/command/event_context"
 )
 
 type productTranslatedIController struct {
 	produtTranslatedInteractor usecases.ProductTranslatedInteractor
 }
 
-type ProductTranslatedController interface {
-	Create(context router.EventContext) error
-}
-
-func NewProductTranslatedController(productTranslatedIIteractor usecases.ProductTranslatedInteractor) ProductTranslatedController {
+func NewProductTranslatedController(productTranslatedIIteractor usecases.ProductTranslatedInteractor) event_context.ProductTranslatedController {
 	return &productTranslatedIController{productTranslatedIIteractor}
 }
 

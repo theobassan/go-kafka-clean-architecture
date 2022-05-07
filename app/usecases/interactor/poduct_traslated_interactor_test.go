@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductTranslatedInteractorCreate_shoudlCreate(t *testing.T) {
@@ -24,7 +25,7 @@ func TestProductTranslatedInteractorCreate_shoudlCreate(t *testing.T) {
 	)
 
 	returnedId, err := productTranslatedInteractor.Create(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	productTranslatedRepositoryMock.AssertExpectations(t)
 
@@ -64,7 +65,6 @@ func TestProductTranslatedInteractorFindAll_shouldFindAll(t *testing.T) {
 	})
 
 	productTranslatedRepositoryMock := new(repository.ProductTranslatedRepositoryMock)
-
 	productTranslatedRepositoryMock.On("FindAll").Return(products, nil)
 
 	productTranslatedInteractor := NewProductTranslatedInteractor(
@@ -72,16 +72,14 @@ func TestProductTranslatedInteractorFindAll_shouldFindAll(t *testing.T) {
 	)
 
 	returnedProducts, err := productTranslatedInteractor.FindAll()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	productTranslatedRepositoryMock.AssertExpectations(t)
 
 	assert.Len(t, returnedProducts, 1)
-
-	returnedProduct := returnedProducts[0]
-	assert.Equal(t, *returnedProduct.ID, productID)
-	assert.Equal(t, *returnedProduct.Type, productType)
-	assert.Equal(t, *returnedProduct.Name, productName)
+	assert.Equal(t, *returnedProducts[0].ID, productID)
+	assert.Equal(t, *returnedProducts[0].Type, productType)
+	assert.Equal(t, *returnedProducts[0].Name, productName)
 }
 
 func TestProductTranslatedInteractorFindAll_shoudlReturnError_whenRepositoryReturnError(t *testing.T) {
@@ -97,7 +95,8 @@ func TestProductTranslatedInteractorFindAll_shoudlReturnError_whenRepositoryRetu
 
 	returnedProducts, returnedErr := productTranslatedInteractor.FindAll()
 	assert.Nil(t, returnedProducts)
-	assert.EqualError(t, returnedErr, err)
 
 	productTranslatedRepositoryMock.AssertExpectations(t)
+
+	assert.EqualError(t, returnedErr, err)
 }

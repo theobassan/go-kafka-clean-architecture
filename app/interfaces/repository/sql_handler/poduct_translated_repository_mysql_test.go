@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductTranslatedRepositoryMySqlCreate_shoudlCreate(t *testing.T) {
@@ -21,8 +22,8 @@ func TestProductTranslatedRepositoryMySqlCreate_shoudlCreate(t *testing.T) {
 		Name: &productName,
 	}
 
-	db, dbMock, err := database.NewSQLHandlerMock()
-	assert.NoError(t, err)
+	db, dbMock, err := database.NewSqlHandlerMock()
+	require.NoError(t, err)
 
 	createdID := int64(1)
 	dbMock.ExpectExec(
@@ -38,7 +39,8 @@ func TestProductTranslatedRepositoryMySqlCreate_shoudlCreate(t *testing.T) {
 	productTranslatedRepositoryMySql := NewProductTranslatedRepositoryMySql(db)
 
 	returnedId, err := productTranslatedRepositoryMySql.Create(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
 	assert.Equal(t, *returnedId, createdID)
 }
 
@@ -47,8 +49,8 @@ func TestProductTranslatedRepositoryMySqlFindAll_shoudlFindAll(t *testing.T) {
 	productType := "Type"
 	productName := "Name"
 
-	db, dbMock, err := database.NewSQLHandlerMock()
-	assert.NoError(t, err)
+	db, dbMock, err := database.NewSqlHandlerMock()
+	require.NoError(t, err)
 
 	dbMock.ExpectQuery(
 		regexp.QuoteMeta(`
@@ -64,9 +66,11 @@ func TestProductTranslatedRepositoryMySqlFindAll_shoudlFindAll(t *testing.T) {
 
 	productTranslatedRepositoryMySql := NewProductTranslatedRepositoryMySql(db)
 
-	returnedProduct, err := productTranslatedRepositoryMySql.FindAll()
-	assert.NoError(t, err)
-	assert.Equal(t, *returnedProduct[0].ID, productID)
-	assert.Equal(t, *returnedProduct[0].Type, productType)
-	assert.Equal(t, *returnedProduct[0].Name, productName)
+	returnedProducts, err := productTranslatedRepositoryMySql.FindAll()
+	require.NoError(t, err)
+
+	assert.Len(t, returnedProducts, 1)
+	assert.Equal(t, *returnedProducts[0].ID, productID)
+	assert.Equal(t, *returnedProducts[0].Type, productType)
+	assert.Equal(t, *returnedProducts[0].Name, productName)
 }

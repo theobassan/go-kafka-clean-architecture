@@ -50,7 +50,7 @@ func SetupMySql() (*gnomock.Container, error) {
 	return kafkaC, nil
 }
 
-func SetupSQLHandlerMySQL() (database.SQLHandler, *gnomock.Container, error) {
+func SetupSqlHandlerMySql() (database.SqlHandler, *gnomock.Container, error) {
 	mySqlC, err := SetupMySql()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)
@@ -62,7 +62,7 @@ func SetupSQLHandlerMySQL() (database.SQLHandler, *gnomock.Container, error) {
 		dbSqlUsername, dbSqlPassword, addr, dbSqlName,
 	)
 
-	mySqlDb, err := sql_handler.NewSQLDatabase("mysql", connectionString)
+	mySqlDb, err := sql_handler.NewSqlDatabase("mysql", connectionString)
 	if !errors.Is(err, nil) {
 		gnomock.Stop(mySqlC)
 		return nil, nil, errors.Wrap(err, 1)
@@ -94,7 +94,7 @@ func SetupPostgres() (*gnomock.Container, error) {
 	return postgresC, nil
 }
 
-func SetupSQLHandlerPostgres() (database.SQLHandler, *gnomock.Container, error) {
+func SetupSqlHandlerPostgres() (database.SqlHandler, *gnomock.Container, error) {
 	postgresC, err := SetupPostgres()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)
@@ -104,7 +104,7 @@ func SetupSQLHandlerPostgres() (database.SQLHandler, *gnomock.Container, error) 
 		postgresC.Host, postgresC.DefaultPort(), dbSqlUsername, dbSqlPassword, dbSqlName,
 	)
 
-	postgresDb, err := sql_handler.NewSQLDatabase("postgres", connectionString)
+	postgresDb, err := sql_handler.NewSqlDatabase("postgres", connectionString)
 	if !errors.Is(err, nil) {
 		gnomock.Stop(postgresC)
 		return nil, nil, errors.Wrap(err, 1)
@@ -113,7 +113,7 @@ func SetupSQLHandlerPostgres() (database.SQLHandler, *gnomock.Container, error) 
 	return postgresDb, postgresC, nil
 }
 
-func SetupSQLGormPostgres() (database.SQLGorm, *gnomock.Container, error) {
+func SetupSqlGormPostgres() (database.SqlGorm, *gnomock.Container, error) {
 	postgresC, err := SetupPostgres()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)
@@ -145,14 +145,14 @@ func SetupKafka() (*gnomock.Container, error) {
 	return kafkaC, nil
 }
 
-func SetupEventAPI() (api.EventAPI, *gnomock.Container, error) {
+func SetupEventApi() (api.EventApi, *gnomock.Container, error) {
 	kafkaC, err := SetupKafka()
 	if !errors.Is(err, nil) {
 		return nil, nil, errors.Wrap(err, 1)
 	}
 
 	connectionString := kafkaC.Address(kafka.BrokerPort)
-	eventAPI := event_api.NewKafkaAPI(connectionString)
+	eventApi := event_api.NewKafkaApi(connectionString)
 
-	return eventAPI, kafkaC, nil
+	return eventApi, kafkaC, nil
 }

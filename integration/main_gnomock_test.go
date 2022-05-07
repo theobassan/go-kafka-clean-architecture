@@ -1,14 +1,16 @@
 package integration
 
 import (
+	"go-kafka-clean-architecture/app/command/controller/event_context"
+	"go-kafka-clean-architecture/app/command/controller/http_context"
 	"go-kafka-clean-architecture/app/infrastructure/api/rest_api"
 	"go-kafka-clean-architecture/app/infrastructure/logger"
 	event_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/event_context"
 	http_context_infrastructure "go-kafka-clean-architecture/app/infrastructure/router/http_context"
 	"go-kafka-clean-architecture/app/interfaces/repository/sql_gorm/model"
+	"go-kafka-clean-architecture/app/registry"
 	"go-kafka-clean-architecture/integration/gnomocktest"
 	"go-kafka-clean-architecture/integration/test"
-	"go-kafka-clean-architecture/registry"
 	"strconv"
 	"testing"
 
@@ -22,26 +24,31 @@ import (
 func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	mySqlDb, mySqlC, err := gnomocktest.SetupSQLHandlerMySQL()
+	mySqlDb, mySqlC, err := gnomocktest.SetupSqlHandlerMySql()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(mySqlC)
 
-	kafkaAPI, kafkaC, err := gnomocktest.SetupEventAPI()
+	kafkaApi, kafkaC, err := gnomocktest.SetupEventApi()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(kafkaC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
-	restAPI := rest_api.NewHttpAPI(serverURL)
+	restApi := rest_api.NewHttpApi(serverURL)
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppControllerMySql(restAPI, mySqlDb, kafkaAPI)
+	httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerMySqlEventApiBrasilProductController(restApi, mySqlDb, kafkaApi)
+	newHttpContextSqlHandlerMySqlProductTranslatedController := r.NewHttpContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController, newHttpContextSqlHandlerMySqlProductTranslatedController)
+
+	eventContextSqlHandlerMySqlProductTranslatedController := r.NewEventContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	eventAppController := event_context.NewAppController(eventContextSqlHandlerMySqlProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
 	kafkaConnectionString := kafkaC.Address(kafka.BrokerPort)
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go event_context_infrastructure.StartKafkaRouter(eventAppController, kafkaConnectionString, logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	test.TestCreate(t, serverURL, int64(123))
 
@@ -55,26 +62,31 @@ func TestCreate_gnomock_mysql_sql_handler(t *testing.T) {
 func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomocktest.SetupSQLHandlerPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSqlHandlerPostgres()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(postgresC)
 
-	kafkaAPI, kafkaC, err := gnomocktest.SetupEventAPI()
+	kafkaApi, kafkaC, err := gnomocktest.SetupEventApi()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(kafkaC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
-	restAPI := rest_api.NewHttpAPI(serverURL)
+	restApi := rest_api.NewHttpApi(serverURL)
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(restAPI, postgresDb, kafkaAPI)
-	eventContextAppController := r.NewEventContextRestSqlEventAppControllerPostgres(restAPI, postgresDb, kafkaAPI)
+	httpContextRestApiSqlHandlerPostgresEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerPostgresEventApiBrasilProductController(restApi, postgresDb, kafkaApi)
+	newHttpContextSqlHandlerPostgresProductTranslatedController := r.NewHttpContextSqlHandlerPostgresProductTranslatedController(postgresDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerPostgresEventApiBrasilProductController, newHttpContextSqlHandlerPostgresProductTranslatedController)
+
+	eventContextSqlHandlerPostgresProductTranslatedController := r.NewEventContextSqlHandlerPostgresProductTranslatedController(postgresDb)
+	eventAppController := event_context.NewAppController(eventContextSqlHandlerPostgresProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
 	kafkaConnectionString := kafkaC.Address(kafka.BrokerPort)
-	go event_context_infrastructure.StartKafkaRouter(eventContextAppController, kafkaConnectionString, logger)
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go event_context_infrastructure.StartKafkaRouter(eventAppController, kafkaConnectionString, logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	test.TestCreate(t, serverURL, int64(123))
 
@@ -88,17 +100,20 @@ func TestCreate_gnomock_postgres_sql_handler(t *testing.T) {
 func TestFindAll_gnomock_mqsql_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	mySqlDb, mySqlC, err := gnomocktest.SetupSQLHandlerMySQL()
+	mySqlDb, mySqlC, err := gnomocktest.SetupSqlHandlerMySql()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(mySqlC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerMySql(nil, mySqlDb, nil)
+	httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerMySqlEventApiBrasilProductController(nil, mySqlDb, nil)
+	newHttpContextSqlHandlerMySqlProductTranslatedController := r.NewHttpContextSqlHandlerMySqlProductTranslatedController(mySqlDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerMySqlEventApiBrasilProductController, newHttpContextSqlHandlerMySqlProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
@@ -129,17 +144,20 @@ func TestFindAll_gnomock_mqsql_sql_handler(t *testing.T) {
 func TestFindAll_gnomock_postgres_sql_handler(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomocktest.SetupSQLHandlerPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSqlHandlerPostgres()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(postgresC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestSqlEventAppControllerPostgres(nil, postgresDb, nil)
+	httpContextRestApiSqlHandlerPostgresEventApiBrasilProductController := r.NewHttpContextRestApiSqlHandlerPostgresEventApiBrasilProductController(nil, postgresDb, nil)
+	newHttpContextSqlHandlerPostgresProductTranslatedController := r.NewHttpContextSqlHandlerPostgresProductTranslatedController(postgresDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlHandlerPostgresEventApiBrasilProductController, newHttpContextSqlHandlerPostgresProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"
@@ -170,17 +188,20 @@ func TestFindAll_gnomock_postgres_sql_handler(t *testing.T) {
 func TestFindAll_gnomock_postgres_sql_gorm(t *testing.T) {
 	port, _ := nat.NewPort("", strconv.Itoa(8080))
 
-	postgresDb, postgresC, err := gnomocktest.SetupSQLGormPostgres()
+	postgresDb, postgresC, err := gnomocktest.SetupSqlGormPostgres()
 	require.NoError(t, err)
 	//defer gnomocktest.Stop(postgresC)
 
 	serverURL := "http://localhost:" + strconv.Itoa(port.Int())
 
 	r := registry.NewRegistry()
-	httpContextAppController := r.NewHttpContextRestGormEventAppController(nil, postgresDb, nil)
+	httpContextRestApiSqlGormEventApiBrasilProductController := r.NewHttpContextRestApiSqlGormEventApiBrasilProductController(nil, postgresDb, nil)
+	newHttpContextSqlGormProductTranslatedController := r.NewHttpContextSqlGormProductTranslatedController(postgresDb)
+	httpAppController := http_context.NewAppController(httpContextRestApiSqlGormEventApiBrasilProductController, newHttpContextSqlGormProductTranslatedController)
+
 	logger := logger.NewDebugLogger()
 
-	go http_context_infrastructure.StartEchoRouter(httpContextAppController, port.Int(), logger)
+	go http_context_infrastructure.StartEchoRouter(httpAppController, port.Int(), logger)
 
 	productID := int64(123)
 	productType := "Type"

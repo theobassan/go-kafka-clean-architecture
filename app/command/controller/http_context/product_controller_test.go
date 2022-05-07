@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestProductControllerCreate_shoudlCreate(t *testing.T) {
@@ -27,13 +28,14 @@ func TestProductControllerCreate_shoudlCreate(t *testing.T) {
 	}
 
 	productJSON, err := json.Marshal(product)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	request := httptest.NewRequest(http.MethodPost, "/product", strings.NewReader(string(productJSON)))
 	responseWriter := httptest.NewRecorder()
 	context := router.NewHttpContextMock(responseWriter, request)
 
-	productController.Create(context)
+	err = productController.Create(context)
+	require.NoError(t, err)
 
 	productInteractorMock.AssertExpectations(t)
 
@@ -66,9 +68,10 @@ func TestProductControllerFindAll_shoudlFindAll(t *testing.T) {
 	}
 	modelProducts := []*model.Product{modelProduct}
 	productsJSON, err := json.Marshal(modelProducts)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	productController.FindAll(context)
+	err = productController.FindAll(context)
+	require.NoError(t, err)
 
 	productInteractorMock.AssertExpectations(t)
 
@@ -100,9 +103,10 @@ func TestProductControllerGet_shoudlGet(t *testing.T) {
 		Name: &productName,
 	}
 	productJSON, err := json.Marshal(modelProduct)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	productController.Get(context)
+	err = productController.Get(context)
+	require.NoError(t, err)
 
 	productInteractorMock.AssertExpectations(t)
 

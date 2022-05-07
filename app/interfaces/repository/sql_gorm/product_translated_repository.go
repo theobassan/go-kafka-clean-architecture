@@ -10,10 +10,10 @@ import (
 )
 
 type productTranslatedRepository struct {
-	sqlGorm database.SQLGorm
+	sqlGorm database.SqlGorm
 }
 
-func NewProductTranslatedRepository(sqlGorm database.SQLGorm) repository.ProductTranslatedRepository {
+func NewProductTranslatedRepository(sqlGorm database.SqlGorm) repository.ProductTranslatedRepository {
 	return &productTranslatedRepository{sqlGorm}
 }
 

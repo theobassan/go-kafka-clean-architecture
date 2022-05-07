@@ -9,17 +9,14 @@ import (
 	"go-kafka-clean-architecture/app/command/controller/http_context/model"
 	"go-kafka-clean-architecture/app/command/router"
 	"go-kafka-clean-architecture/app/command/usecases"
+	"go-kafka-clean-architecture/app/infrastructure/command/http_context"
 )
 
 type productTranslatedController struct {
 	produtTranslatedInteractor usecases.ProductTranslatedInteractor
 }
 
-type ProductTranslatedController interface {
-	FindAll(context router.HttpContext) error
-}
-
-func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) ProductTranslatedController {
+func NewProductTranslatedController(productTranslatedIteractor usecases.ProductTranslatedInteractor) http_context.ProductTranslatedController {
 	return &productTranslatedController{productTranslatedIteractor}
 }
 
